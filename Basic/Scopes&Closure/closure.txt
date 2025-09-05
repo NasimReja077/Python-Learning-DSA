@@ -1,0 +1,40 @@
+A closure in Python is a nested function that remembers and has access to variables from its enclosing lexical scope, even after the outer function has finished executing. This means the inner function "closes over" the variables from its surrounding environment, preserving their values. 
+Here's a breakdown of the key characteristics:
+
+
+Nested Function: A closure involves a function defined inside another function.
+Access to Enclosing Scope: The inner function can access variables defined in the outer function's scope.
+
+
+Persistence of Variables: Crucially, these variables remain accessible to the inner function even after the outer function has completed its execution and returned. This is the defining feature of a closure.
+
+Example:
+
+def outer_function(message):
+    def inner_function():
+        print(message)  # 'inner_function' accesses 'message' from 'outer_function'
+    return inner_function
+
+# Create a closure
+my_closure = outer_function("Hello from closure!")
+
+# Call the closure, which still remembers 'message'
+my_closure()
+
+
+In this example, inner_function is a closure because it retains access to the message 
+variable from outer_function, even after outer_function has finished executing and returned inner_function. When my_closure() is called, it prints "Hello from closure!", demonstrating that the message variable's value was preserved.
+
+When to use closures:
+
+Function Factories:
+Creating functions that generate other functions with pre-set behavior or parameters.
+
+Data Hiding/Encapsulation:
+Providing a way to create private-like variables within a function's scope, accessible only through the returned inner function.
+
+Stateful Functions:
+Building functions that maintain an internal state across multiple invocations without using classes.
+
+Callbacks and Event Handling:
+Passing functions with preserved context to be executed later

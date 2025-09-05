@@ -1,0 +1,22 @@
+The .append() method:
+.append() is a built-in list method in Python
+
+It adds a single element to the end of a list
+
+Think of it like "attaching" or "adding" an item to the end of a list
+
+It modifies the list in-place (doesn't create a new list)
+
+Why use .append()?
+
+It's the most efficient way to add single elements to a list
+
+It modifies the list directly (in-place operation)
+
+It's more memory efficient than creating new lists
+
+It's the most readable and commonly used method
+
+It's faster than using += or + for adding single elements
+
+Think of .append() like adding a new car to a parking lot - you're just putting it in the next available space at the end of the lot, rather than creating a whole new parking lot with all the old cars plus the new one.
