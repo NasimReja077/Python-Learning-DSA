@@ -1,0 +1,4 @@
+https://pynative.com/python-list-exercise-with-solutions/
+https://www.geeksforgeeks.org/python/python-list-exercise/ 
+https://medium.com/@nishithakalathil/python-list-solved-exercises-9d117dd761b6 
+https://www.geeksforgeeks.org/python/python-list-add-append-programs/ 
