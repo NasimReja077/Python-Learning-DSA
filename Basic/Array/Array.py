@@ -16,9 +16,9 @@ cars = ["Ford", "Volvo", "BMW", "TATA", "Marutie"]
 #      print(i)
 
 
-# cars.append("Honda") # Adding Array Elements
-# cars.append("Hero Motor")
-# print(cars)
+cars.append("Honda") # Adding Array Elements
+cars.append("Hero Motor")
+print(cars)
 
 # cars.pop(0) # Removing Array Elements
 # cars.pop(1)
@@ -44,8 +44,8 @@ cars = ["Ford", "Volvo", "BMW", "TATA", "Marutie"]
 # cars.pop(1)
 # print(cars)
 
-# cars.reverse()
-# print(cars)
+cars.reverse()
+print(cars)
 
 # ********** Python List sort() Method**********
 # cars.sort()

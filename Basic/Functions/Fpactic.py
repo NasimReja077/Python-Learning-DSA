@@ -32,16 +32,16 @@
 
 
 # Positional Arguments
-# def nameAge(name, age):
-#      print("Hi I am", name)
-#      print("My age is", age)
-#      print("Nice to meet you!")
+def nameAge(name, age):
+     print("Hi I am", name)
+     print("My age is", age)
+     print("Nice to meet you!")
      
-# print("Case-1:")
-# nameAge("Nasim", 23)
+print("Case-1:")
+nameAge("Nasim", 23)
 
-# print("\nCase-2:")
-# nameAge(25, "bob")
+print("\nCase-2:")
+nameAge(25, "bob")
 
 #----------------####------------
 # Arbitrary Keyword  Arguments
@@ -123,13 +123,13 @@
 # Syntax: print(function_name.__doc__)
 
 # # Example
-# def evenOdd(x):
-#     """Function to check if the number is even or odd"""
-#     if (x % 2 == 0):
-#         print("even")
-#     else:
-#         print("odd")
-# print(evenOdd.__doc__)
+def evenOdd(x):
+    """Function to check if the number is even or odd"""
+    if (x % 2 == 0):
+        print("even")
+    else:
+        print("odd")
+print(evenOdd.__doc__)
 
 
 # # Closure in Python
