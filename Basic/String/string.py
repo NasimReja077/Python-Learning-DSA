@@ -62,7 +62,7 @@ print("Python" in s)   # Output: False
 # Slicing
 s = "Pyhthon Knolg"
 print(s[0:6])
-print([7:])
+# print([7:])
 print(s[::-1])
 
 # Common String Methods
