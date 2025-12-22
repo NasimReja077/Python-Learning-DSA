@@ -157,3 +157,6 @@ ll.delete_middle(25)
 ll.delete_end()
 
 ll.display()
+
+
+# emupedia
