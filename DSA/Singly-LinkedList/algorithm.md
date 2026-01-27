@@ -31,11 +31,14 @@
 **Step 4:** Set `new_node.next = NULL`
 
 **Step 5:** If `head == NULL`
+
   → Set `head = new_node` and go to Step 8
+
 
 **Step 6:** Set `temp = head`
 
 **Step 7:** Traverse while `temp.next != NULL`
+
      → `temp = temp.next`
 
 **Step 8:** Set `temp.next = new_node`
@@ -49,6 +52,7 @@
 **Step 1:** Start
 
 **Step 2:** If `head == NULL`
+
   → Print `"Linked List is Empty"` and go to Step 6
 
 **Step 3:** Set `temp = head`
@@ -171,21 +175,23 @@ Here is a **clear, exam-ready algorithm** for
 
 **Step 5:** Traverse the list while `temp != NULL`
 
-  **Step 5.1:** If `temp.data == key`
-   → Set `new_node.next = temp.next`
-   → Set `temp.next = new_node`
-   → Print `"Node inserted successfully"`
-   → Go to Step 8
+* #### **Step 5.1:** If `temp.data == key`
 
-  **Step 5.2:** Else
-   → Set `temp = temp.next`
+  > → Set `new_node.next = temp.next`
 
-**Step 6:** If `temp == NULL`
-  → Print `"Key not found"`
+  > → Set `temp.next = new_node`
+
+  > → Print `"Node inserted successfully"`
+
+  > → Go to Step 7
+
+* **Step 5.2:** Else
+
+   > → Set `temp = temp.next`
+
+**Step 6:** Print `"Key not found"`
 
 **Step 7:** Stop
-
-**Step 8:** Stop
 
 ---
 
