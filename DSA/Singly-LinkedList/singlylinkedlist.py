@@ -13,8 +13,8 @@ class SinglyLinkedList:
 
     # i) Insert a node at the beginning
     def insert_beginning(self, value):
-        new_node = Node(value)
-        new_node.next = self.head
+        new_node = Node(value) # Node(value) mines creating a new node with given value
+        new_node.next = self.head # new_node.next = self.head 
         self.head = new_node
         print(value, "inserted at beginning")
 
@@ -98,7 +98,7 @@ class SinglyLinkedList:
             return
 
         print(self.head.data, "deleted from beginning") # self.head.data means the data of head node
-        self.head = self.head.next 
+        self.head = self.head.next
 
 
     # viii) Delete from middle (given element)
