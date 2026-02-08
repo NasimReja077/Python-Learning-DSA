@@ -110,7 +110,7 @@ class DoublyLinkedList:
             return
 
         print(self.head.data, "deleted from beginning")
-        self.head = self.head.next
+        self.head = self.head.next # head shif to next node 
 
         if self.head:
             self.head.prev = None
