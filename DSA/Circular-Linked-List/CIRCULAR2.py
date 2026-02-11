@@ -26,8 +26,8 @@ class CircularLinkedList:
             temp = temp.next
 
         new_node.next = self.head
-        temp.next = new_node
-        self.head = new_node
+        temp.next = new_node #  Update Last Node to Point to New Node
+        self.head = new_node # Update HEAD to New Node
 
         print(value, "inserted at beginning")
 
@@ -159,11 +159,14 @@ class CircularLinkedList:
             return
 
         temp = self.head
-        while temp.next.next != self.head:
+        prev = None
+        
+        while temp.next != self.head:
+            prev = temp
             temp = temp.next
 
-        print(temp.next.data, "deleted from end")
-        temp.next = self.head
+        print(temp.data, "deleted from end")
+        prev.next = self.head
 
 
     # ix) Delete a given element
@@ -195,6 +198,7 @@ class CircularLinkedList:
 
 cll = CircularLinkedList()
 
+cll.insert_beginning(5)
 cll.insert_beginning(10)
 cll.insert_end(20)
 cll.insert_end(30)
@@ -208,7 +212,58 @@ cll.search(25)
 cll.count_nodes()
 
 cll.delete_beginning()
-cll.delete_value(25)
-cll.delete_end()
-
 cll.display()
+cll.count_nodes()
+
+cll.delete_value(30)
+cll.display()
+cll.count_nodes()
+
+cll.delete_end()
+cll.display()
+cll.count_nodes()
+
+
+
+def delete_value(self, key):
+
+    if self.head is None:
+        print("List is empty")
+        return
+
+    temp = self.head
+    prev = None
+
+    # Case 1: If head contains key
+    if temp.data == key:
+
+        # Only one node case
+        if temp.next == self.head:
+            self.head = None
+            print(key, "deleted (only node)")
+            return
+
+        # More than one node
+        last = self.head
+        while last.next != self.head:
+            last = last.next
+
+        self.head = self.head.next
+        last.next = self.head
+        print(key, "deleted from circular linked list")
+        return
+
+    # Case 2: Deleting non-head node
+    prev = temp
+    temp = temp.next
+
+    while temp != self.head:
+        if temp.data == key:
+            prev.next = temp.next
+            print(key, "deleted from circular linked list")
+            return
+
+        prev = temp
+        temp = temp.next
+
+    print(key, "not found")
