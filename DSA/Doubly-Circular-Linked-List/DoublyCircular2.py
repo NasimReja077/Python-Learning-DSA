@@ -230,44 +230,46 @@ class DoublyCircularLinkedList:
         self.head.prev = last.prev
         
         print(deleted_value, "deleted from end")
-
-
-    # iii) Delete a given element
+    
+    # iii) Delete a given element 
     def delete_element(self, key):
         if self.head is None:
             print("List is empty")
             return
-
+        
         temp = self.head
         
         while True:
             if temp.data == key:
-                # Only one node
+                # Case 1: Only one node
                 if temp.next == temp:
                     self.head = None
                     print(key, "deleted (only node)")
                     return
-                
-                # Deleting head
+
+                # Case 2: Deleting head node
                 if temp == self.head:
-                    self.delete_beginning()
+                    last = self.head.prev
+
+                    self.head.next.prev = last
+                    last.next = self.head.next
+                    self.head = self.head.next
+
+                    print(key, "deleted from beginning")
                     return
-                
-                # Deleting non-head node
+
+                # Case 3: Deleting middle or last node
                 temp.prev.next = temp.next
                 temp.next.prev = temp.prev
-                
+
                 print(key, "deleted from the list")
                 return
-
             temp = temp.next
             
             if temp == self.head:
                 break
-
-        print(key, "not found")
-
-
+            print(key, "not found")
+    
 # ---------------- MAIN PROGRAM ----------------
 dcll = DoublyCircularLinkedList()
 
