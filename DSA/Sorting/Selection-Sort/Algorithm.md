@@ -157,3 +157,58 @@ Selection Sort is a comparison-based sorting technique that repeatedly selects t
 ### Space Complexity:
 
 O(1) (In-place sorting)
+
+---
+
+# ✅ Algorithm: Selection Sort
+
+**Algorithm Name:** `SELECTION_SORT(A, n)`
+Where:
+
+* `A` = Array
+* `n` = Number of elements
+
+---
+
+### **Step 1:** Start
+
+### **Step 2:** Read array `A` of size `n`
+
+### **Step 3:** For `i = 0` to `n - 2` do
+
+    3.1 Set `min_index ← i`
+    👉 Assume the first element of unsorted part is minimum
+
+    3.2 For `j = i + 1` to `n - 1` do
+
+        a) If `A[j] < A[min_index]` then
+            Set `min_index ← j`
+
+    3.3 End inner loop
+
+    3.4 If `min_index ≠ i` then
+        Swap `A[i]` and `A[min_index]`
+
+### **Step 4:** End outer loop
+
+### **Step 5:** Output sorted array
+
+### **Step 6:** Stop
+
+---
+
+# 📌 Key Idea (for Viva)
+
+* Divide array into **sorted** and **unsorted** parts
+* Find smallest element from unsorted part
+* Place it at correct position
+* Repeat until fully sorted
+
+---
+
+# 📊 Complexity (Important for Exam)
+
+* Best Case = O(n²)
+* Average Case = O(n²)
+* Worst Case = O(n²)
+* Space Complexity = O(1)
