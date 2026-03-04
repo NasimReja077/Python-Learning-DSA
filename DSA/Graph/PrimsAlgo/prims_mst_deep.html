@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prim's MST — Deep Dive</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=DM+Sans:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060608;
+  --surface: #0e0e14;
+  --surface2: #13131c;
+  --border: #1a1a28;
+  --border2: #222235;
+  --cyan: #00d4ff;
+  --green: #00ff88;
+  --orange: #ff7043;
+  --purple: #b388ff;
+  --yellow: #ffd740;
+  --red: #ff5252;
+  --text: #dde1f0;
+  --dim: #6b6b9a;
+  --dimmer: #3a3a58;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── scrollbar ── */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
+
+/* ── nav ── */
+.nav {
+  position: sticky; top:0; z-index:100;
+  background: rgba(6,6,8,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap:6px;
+  padding: 0 28px; height: 52px;
+  overflow-x: auto;
+}
+.nav-label {
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px; color:var(--dim);
+  margin-right:10px; white-space:nowrap;
+}
+.nav a {
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px; color:var(--dim);
+  text-decoration:none; padding:4px 12px;
+  border-radius:4px; white-space:nowrap;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+.nav a:hover { color:var(--cyan); border-color:var(--border2); }
+
+/* ── page ── */
+.page { max-width:1120px; margin:0 auto; padding:0 24px 100px; }
+
+/* ── hero ── */
+.hero {
+  padding: 64px 0 48px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 56px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap:32px; align-items:end;
+}
+@media(max-width:640px){ .hero { grid-template-columns:1fr; } }
+.hero-eyebrow {
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px; letter-spacing:3px; color:var(--cyan);
+  text-transform:uppercase; margin-bottom:14px;
+}
+.hero h1 {
+  font-size: clamp(36px,6vw,72px);
+  font-weight:900; line-height:1;
+  letter-spacing:-2px;
+  color:#fff;
+}
+.hero h1 em { font-style:normal; color:var(--cyan); }
+.hero-sub {
+  margin-top:18px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:12.5px; color:var(--dim);
+  line-height:1.8; max-width:480px;
+}
+.hero-badges { display:flex; gap:8px; flex-wrap:wrap; margin-top:22px; }
+.badge-pill {
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px; padding:5px 12px;
+  border:1px solid var(--border2);
+  border-radius:100px; color:var(--dim);
+}
+.badge-pill.hi { border-color:var(--cyan); color:var(--cyan); }
+.hero-stats { display:flex; flex-direction:column; gap:10px; }
+.stat-box {
+  background: var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px; padding:14px 20px;
+  text-align:right;
+  min-width:130px;
+}
+.stat-box .sv { font-size:28px; font-weight:900; color:var(--cyan); letter-spacing:-1px; }
+.stat-box .sl { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--dim); letter-spacing:1px; margin-top:2px; }
+
+/* ── section ── */
+.section { margin-bottom:64px; }
+.sec-head {
+  display:flex; align-items:center; gap:14px;
+  margin-bottom:28px; padding-bottom:14px;
+  border-bottom:1px solid var(--border);
+}
+.sec-num {
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px; color:var(--cyan);
+  background: rgba(0,212,255,0.08);
+  border:1px solid rgba(0,212,255,0.2);
+  border-radius:6px; padding:4px 10px;
+  letter-spacing:1px;
+}
+.sec-head h2 { font-size:20px; font-weight:700; }
+
+/* ── cards ── */
+.card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px; padding:24px;
+  margin-bottom:16px;
+}
+.card-title {
+  font-size:13px; font-weight:700;
+  margin-bottom:10px;
+}
+
+/* ── concept strip ── */
+.concepts { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
+.concept {
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:10px; padding:22px;
+  position:relative; overflow:hidden;
+}
+.concept::after {
+  content:''; position:absolute;
+  top:0; left:0; right:0; height:2px;
+}
+.concept.c1::after { background:var(--cyan); }
+.concept.c2::after { background:var(--green); }
+.concept.c3::after { background:var(--orange); }
+.concept.c4::after { background:var(--purple); }
+.concept-icon { font-size:22px; margin-bottom:10px; }
+.concept h3 { font-size:14px; font-weight:700; margin-bottom:8px; }
+.concept p {
+  font-family:'JetBrains Mono',monospace;
+  font-size:11.5px; color:var(--dim); line-height:1.7;
+}
+.concept code {
+  background:rgba(255,255,255,0.05);
+  border-radius:3px; padding:1px 5px;
+  color:var(--cyan);
+}
+
+/* ── analogy box ── */
+.analogy {
+  background: linear-gradient(135deg,rgba(0,212,255,0.05),rgba(0,255,136,0.05));
+  border:1px solid rgba(0,212,255,0.15);
+  border-radius:12px; padding:28px;
+  margin-bottom:16px;
+}
+.analogy-label {
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px; letter-spacing:3px; color:var(--cyan);
+  text-transform:uppercase; margin-bottom:10px;
+}
+.analogy p { color:var(--text); font-size:14px; line-height:1.8; }
+.analogy strong { color:var(--cyan); }
+
+/* ── variables explanation ── */
+.vars { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+@media(max-width:600px){ .vars { grid-template-columns:1fr; } }
+.var-box {
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:10px; padding:18px;
+}
+.var-name {
+  font-family:'JetBrains Mono',monospace;
+  font-size:15px; font-weight:700;
+  color:var(--yellow); margin-bottom:6px;
+}
+.var-type {
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px; color:var(--dim);
+  margin-bottom:10px;
+}
+.var-desc { font-size:13px; color:var(--text); line-height:1.6; }
+.var-example {
+  margin-top:10px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px; color:var(--green);
+  background:rgba(0,255,136,0.06);
+  border-radius:6px; padding:8px;
+}
+
+/* ── interactive stepper ── */
+.stepper-shell {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px; overflow:hidden;
+}
+.stepper-top {
+  background:var(--surface2);
+  border-bottom:1px solid var(--border);
+  padding:18px 24px;
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+}
+.stepper-title { font-size:16px; font-weight:700; }
+.step-btn-row { display:flex; align-items:center; gap:8px; }
+.sbtn {
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px; padding:8px 18px;
+  border-radius:7px; border:1px solid var(--border2);
+  background:transparent; color:var(--text);
+  cursor:pointer; transition:all 0.15s;
+}
+.sbtn:hover:not(:disabled) { border-color:var(--cyan); color:var(--cyan); }
+.sbtn.go { background:var(--cyan); color:#000; border-color:var(--cyan); font-weight:700; }
+.sbtn.go:hover { background:#00b8e0; }
+.sbtn:disabled { opacity:0.25; cursor:default; }
+.step-counter {
+  font-family:'JetBrains Mono',monospace;
+  font-size:13px; color:var(--dim);
+}
+.step-counter b { color:var(--cyan); }
+
+/* progress bar */
+.progress-bar-wrap {
+  height:3px; background:var(--border);
+}
+.progress-bar-fill {
+  height:100%; background:var(--cyan);
+  transition: width 0.4s ease;
+}
+
+.stepper-body { padding:24px; }
+
+/* step description card */
+.step-info {
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:10px; padding:20px;
+  margin-bottom:20px;
+  display:grid; grid-template-columns:auto 1fr; gap:16px;
+}
+.step-icon {
+  width:44px; height:44px; border-radius:50%;
+  background:rgba(0,212,255,0.12);
+  border:1px solid rgba(0,212,255,0.25);
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; flex-shrink:0;
+}
+.step-info-content {}
+.step-info-title {
+  font-size:14px; font-weight:700;
+  color:var(--cyan); margin-bottom:6px;
+}
+.step-info-text {
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px; color:var(--dim); line-height:1.75;
+}
+.step-info-text b { color:var(--text); }
+.step-info-text .hl-cyan { color:var(--cyan); }
+.step-info-text .hl-green { color:var(--green); }
+.step-info-text .hl-orange { color:var(--orange); }
+
+/* Main 3-col layout */
+.vis-grid {
+  display:grid;
+  grid-template-columns:1.1fr 1fr;
+  gap:16px;
+}
+@media(max-width:800px){ .vis-grid { grid-template-columns:1fr; } }
+
+/* graph */
+.graph-panel {
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:10px; padding:16px;
+}
+.panel-label {
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px; letter-spacing:2px; color:var(--dim);
+  text-transform:uppercase; margin-bottom:12px;
+}
+#mainSvg { width:100%; height:auto; display:block; }
+
+/* legend */
+.legend {
+  display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;
+}
+.legend-item {
+  display:flex; align-items:center; gap:6px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px; color:var(--dim);
+}
+.legend-dot {
+  width:10px; height:10px; border-radius:50%;
+}
+
+/* state table */
+.table-panel {
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:10px; overflow:hidden;
+}
+.state-tbl {
+  width:100%; border-collapse:collapse;
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;
+}
+.state-tbl th {
+  background:#0a0a12;
+  padding:9px 14px;
+  text-align:left; color:var(--dim);
+  font-size:10px; letter-spacing:1.5px;
+  font-weight:500; border-bottom:1px solid var(--border);
+}
+.state-tbl td {
+  padding:9px 14px;
+  border-bottom:1px solid var(--border);
+  transition: background 0.35s;
+}
+.state-tbl tr:last-child td { border-bottom:none; }
+.state-tbl tr.row-active td { background:rgba(0,212,255,0.08); }
+.state-tbl tr.row-visited td { opacity:0.5; }
+.c-inf { color:var(--dimmer); }
+.c-selected { color:var(--cyan); font-weight:700; }
+.c-updated { color:var(--green); font-weight:700; }
+.c-normal { color:var(--text); }
+.c-visited { color:var(--green); }
+.c-notvisited { color:var(--dimmer); }
+
+/* arrays viz */
+.arrays-row {
+  display:grid; grid-template-columns:1fr 1fr 1fr;
+  gap:12px; margin-top:16px;
+}
+@media(max-width:600px){ .arrays-row { grid-template-columns:1fr; } }
+.arr-box {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:8px; padding:12px;
+}
+.arr-box-label {
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px; color:var(--dim); letter-spacing:1px; margin-bottom:8px;
+}
+.arr-cells { display:flex; gap:4px; }
+.arr-cell {
+  flex:1; background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:5px; padding:6px 4px;
+  text-align:center;
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  transition: all 0.3s;
+}
+.arr-cell .ci { color:var(--dimmer); font-size:9px; display:block; margin-bottom:2px; }
+.arr-cell .cv { color:var(--text); }
+.arr-cell.ac-active { border-color:var(--cyan); background:rgba(0,212,255,0.1); }
+.arr-cell.ac-active .cv { color:var(--cyan); }
+.arr-cell.ac-updated { border-color:var(--green); background:rgba(0,255,136,0.08); }
+.arr-cell.ac-updated .cv { color:var(--green); }
+.arr-cell.ac-visited { opacity:0.45; }
+
+/* what happened log */
+.log-box {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:10px; padding:16px; margin-top:16px;
+}
+.log-title {
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px; letter-spacing:2px; color:var(--dim);
+  text-transform:uppercase; margin-bottom:10px;
+}
+.log-entries { display:flex; flex-direction:column; gap:6px; }
+.log-entry {
+  font-family:'JetBrains Mono',monospace;
+  font-size:11.5px; color:var(--dim);
+  padding:6px 10px;
+  border-radius:5px;
+  border-left:2px solid var(--border);
+  background:rgba(255,255,255,0.02);
+  line-height:1.5;
+}
+.log-entry.le-pick { border-color:var(--cyan); color:var(--text); }
+.log-entry.le-update { border-color:var(--green); }
+.log-entry.le-skip { border-color:var(--dimmer); opacity:0.6; }
+.log-entry.le-mst { border-color:var(--purple); color:var(--purple); }
+
+/* ── adjacency matrix ── */
+.matrix-wrap { overflow-x:auto; }
+.adj-matrix {
+  border-collapse:collapse;
+  font-family:'JetBrains Mono',monospace;
+  font-size:13px;
+  margin:0 auto;
+}
+.adj-matrix th, .adj-matrix td {
+  width:44px; height:44px;
+  text-align:center; vertical-align:middle;
+  border:1px solid var(--border);
+}
+.adj-matrix th { background:#0a0a12; color:var(--dim); font-size:11px; }
+.adj-matrix td { background:var(--surface2); color:var(--text); }
+.adj-matrix td.mz { color:var(--dimmer); }
+.adj-matrix td.mst-cell { background:rgba(0,255,136,0.1); color:var(--green); font-weight:700; border-color:rgba(0,255,136,0.3); }
+.adj-matrix td.diag { background:var(--bg); color:var(--dimmer); }
+
+/* ── code section ── */
+.code-area {
+  background:#050508;
+  border:1px solid var(--border);
+  border-radius:12px; overflow:hidden;
+  margin-bottom:16px;
+}
+.code-header {
+  background:var(--surface2);
+  border-bottom:1px solid var(--border);
+  padding:10px 20px;
+  display:flex; align-items:center; gap:10px;
+}
+.code-dots { display:flex; gap:6px; }
+.code-dots span {
+  width:11px; height:11px; border-radius:50%;
+}
+.code-file {
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px; color:var(--dim); margin-left:4px;
+}
+.code-body {
+  padding:24px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:12.5px; line-height:2;
+  overflow-x:auto;
+}
+.ln { color:var(--dimmer); user-select:none; width:32px; display:inline-block; }
+.kw { color:#ff79c6; }
+.fn { color:var(--cyan); }
+.cm { color:#44446a; font-style:italic; }
+.str { color:var(--orange); }
+.num { color:var(--green); }
+.var { color:var(--yellow); }
+.op { color:var(--purple); }
+.hl-line {
+  display:block;
+  margin:0 -24px; padding:0 24px 0 21px;
+  border-left:3px solid var(--cyan);
+  background:rgba(0,212,255,0.06);
+}
+.hl-line.green-line {
+  border-color:var(--green);
+  background:rgba(0,255,136,0.06);
+}
+.ann {
+  display:inline-block;
+  background:rgba(0,212,255,0.1);
+  border:1px solid rgba(0,212,255,0.2);
+  border-radius:4px;
+  padding:0 8px; margin-left:8px;
+  font-size:11px; color:var(--cyan);
+  vertical-align:middle; line-height:1.4;
+  font-style:normal;
+}
+
+/* ── complexity table ── */
+.cmp-table {
+  width:100%; border-collapse:collapse;
+  font-family:'JetBrains Mono',monospace; font-size:12px;
+}
+.cmp-table th {
+  text-align:left; padding:10px 16px;
+  background:#0a0a12; color:var(--dim);
+  font-size:10px; letter-spacing:1.5px;
+  border-bottom:1px solid var(--border);
+}
+.cmp-table td {
+  padding:10px 16px;
+  border-bottom:1px solid var(--border);
+}
+.cmp-table tr:last-child td { border-bottom:none; }
+.good { color:var(--green); }
+.bad  { color:var(--orange); }
+.meh  { color:var(--yellow); }
+
+/* ── mst result final ── */
+.mst-result {
+  display:grid; grid-template-columns:1fr 1fr; gap:16px;
+}
+@media(max-width:600px){ .mst-result { grid-template-columns:1fr; } }
+.mst-edge-list { display:flex; flex-direction:column; gap:8px; }
+.mst-edge {
+  display:flex; align-items:center; gap:12px;
+  background:var(--surface2); border:1px solid rgba(0,255,136,0.15);
+  border-radius:8px; padding:12px 16px;
+}
+.edge-order {
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px; color:var(--dim);
+  width:20px;
+}
+.edge-nodes {
+  font-family:'JetBrains Mono',monospace;
+  font-size:15px; font-weight:700; color:var(--green);
+  flex:1;
+}
+.edge-weight {
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px; color:var(--text);
+  background:rgba(0,255,136,0.08);
+  border:1px solid rgba(0,255,136,0.2);
+  border-radius:4px; padding:2px 10px;
+}
+.total-box {
+  background: linear-gradient(135deg,rgba(0,212,255,0.08),rgba(0,255,136,0.08));
+  border:1px solid rgba(0,212,255,0.2);
+  border-radius:10px; padding:24px;
+  display:flex; flex-direction:column; justify-content:center;
+  align-items:center; text-align:center;
+}
+.total-box .tl { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--dim); letter-spacing:1px; margin-bottom:8px; }
+.total-box .tv { font-size:52px; font-weight:900; color:var(--cyan); letter-spacing:-2px; line-height:1; }
+.total-box .tu { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--dim); margin-top:8px; }
+.total-box .tn { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--green); margin-top:4px; }
+
+/* ── why correct ── */
+.proof-steps { display:flex; flex-direction:column; gap:10px; }
+.proof-step {
+  display:grid; grid-template-columns:32px 1fr; gap:12px; align-items:start;
+}
+.proof-num {
+  width:32px; height:32px; border-radius:50%;
+  background:rgba(0,212,255,0.1); border:1px solid rgba(0,212,255,0.25);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--cyan);
+  flex-shrink:0;
+}
+.proof-text { padding-top:4px; }
+.proof-text b { color:var(--text); }
+.proof-text { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--dim); line-height:1.7; }
+
+/* ── animations ── */
+@keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+.section { animation: fadeIn 0.5s ease both; }
+
+/* tooltip */
+.tip {
+  display:inline-block; position:relative; cursor:help;
+  border-bottom:1px dashed var(--dimmer);
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <span class="nav-label">Prim's MST //</span>
+  <a href="#s-what">What is MST</a>
+  <a href="#s-idea">Core Idea</a>
+  <a href="#s-vars">Variables</a>
+  <a href="#s-walk">Walkthrough</a>
+  <a href="#s-matrix">Matrix</a>
+  <a href="#s-code">Code</a>
+  <a href="#s-complex">Complexity</a>
+  <a href="#s-result">Result</a>
+</nav>
+
+<div class="page">
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div>
+    <div class="hero-eyebrow">// Algorithm Deep Dive</div>
+    <h1>Prim's<br><em>MST</em></h1>
+    <div class="hero-sub">
+      A complete visual breakdown of Prim's Minimum Spanning Tree algorithm using an Adjacency Matrix.<br>
+      Every line of code. Every array update. Every decision — explained.
+    </div>
+    <div class="hero-badges">
+      <div class="badge-pill hi">Greedy</div>
+      <div class="badge-pill hi">O(V²)</div>
+      <div class="badge-pill">Adjacency Matrix</div>
+      <div class="badge-pill">Undirected Graph</div>
+      <div class="badge-pill">Weighted</div>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="stat-box"><div class="sv">5</div><div class="sl">VERTICES</div></div>
+    <div class="stat-box"><div class="sv">7</div><div class="sl">EDGES</div></div>
+    <div class="stat-box"><div class="sv" style="color:var(--green)">16</div><div class="sl">MST WEIGHT</div></div>
+  </div>
+</div>
+
+<!-- ── SECTION 1: WHAT IS MST ── -->
+<div class="section" id="s-what">
+  <div class="sec-head">
+    <span class="sec-num">01</span>
+    <h2>What is a Minimum Spanning Tree?</h2>
+  </div>
+
+  <div class="analogy">
+    <div class="analogy-label">Real World Analogy</div>
+    <p>
+      Imagine you need to wire internet cables between <strong>5 office buildings</strong>. 
+      Each possible cable route between two buildings has a cost (digging, cable length, etc).
+      You want <strong>all buildings connected</strong> while spending the <strong>minimum total money</strong>.
+      You also can't create loops (wasted cable). That's exactly what an MST gives you — 
+      the <strong>cheapest connected network</strong> with no redundancy.
+    </p>
+  </div>
+
+  <div class="concepts">
+    <div class="concept c1">
+      <div class="concept-icon">🌐</div>
+      <h3>Spanning Tree</h3>
+      <p>A subgraph that <code>connects ALL V vertices</code> using exactly <code>V−1 edges</code> with no cycles. "Spanning" = covers every vertex.</p>
+    </div>
+    <div class="concept c2">
+      <div class="concept-icon">⚖️</div>
+      <h3>Minimum</h3>
+      <p>Among all possible spanning trees, we want the one with the <code>smallest total edge weight</code>. Multiple valid MSTs can exist if weights tie.</p>
+    </div>
+    <div class="concept c3">
+      <div class="concept-icon">🚫</div>
+      <h3>No Cycles</h3>
+      <p>Adding any edge to a spanning tree creates a cycle — making it no longer a tree. We use exactly <code>V−1 = 4</code> edges for 5 vertices.</p>
+    </div>
+    <div class="concept c4">
+      <div class="concept-icon">🔗</div>
+      <h3>Connected</h3>
+      <p>Every vertex must be reachable from every other vertex. Prim's works only on <code>connected</code> graphs (no isolated vertices).</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 2: CORE IDEA ── -->
+<div class="section" id="s-idea">
+  <div class="sec-head">
+    <span class="sec-num">02</span>
+    <h2>Core Idea — How Prim's Works</h2>
+  </div>
+
+  <div class="analogy" style="background:linear-gradient(135deg,rgba(0,255,136,0.05),rgba(179,136,255,0.05));border-color:rgba(0,255,136,0.15);">
+    <div class="analogy-label" style="color:var(--green)">The Algorithm in Plain English</div>
+    <p>
+      Start at <strong>any vertex (vertex 0)</strong>. Maintain two groups: vertices <strong>IN</strong> the MST and vertices <strong>NOT YET IN</strong> it.<br><br>
+      At every step, look at all edges that cross the boundary (one end IN, one end OUT). 
+      Pick the <strong>cheapest crossing edge</strong>. Add that edge and its new vertex to the MST.<br><br>
+      Repeat until <strong>all vertices are IN</strong>. That's your MST.
+    </p>
+  </div>
+
+  <div class="proof-steps">
+    <div class="proof-step">
+      <div class="proof-num">1</div>
+      <div class="proof-text"><b>Initialize:</b> Set key[0]=0, all others=∞, no vertex visited. key[] represents "how cheaply can I pull this vertex into the MST?"</div>
+    </div>
+    <div class="proof-step">
+      <div class="proof-num">2</div>
+      <div class="proof-text"><b>Pick minimum key:</b> Among unvisited vertices, pick the one with smallest key[]. That's the vertex we add to MST this round.</div>
+    </div>
+    <div class="proof-step">
+      <div class="proof-num">3</div>
+      <div class="proof-text"><b>Mark visited:</b> The chosen vertex u is now part of the MST. We'll never reconsider it (greedy lock-in).</div>
+    </div>
+    <div class="proof-step">
+      <div class="proof-num">4</div>
+      <div class="proof-text"><b>Relax neighbors:</b> For every neighbor v of u, if the edge u→v is cheaper than the current best cost to reach v (key[v]), update key[v] and parent[v].</div>
+    </div>
+    <div class="proof-step">
+      <div class="proof-num">5</div>
+      <div class="proof-text"><b>Repeat:</b> Go back to step 2 until all V vertices are visited. The parent[] array now encodes the MST edges.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 3: VARIABLES ── -->
+<div class="section" id="s-vars">
+  <div class="sec-head">
+    <span class="sec-num">03</span>
+    <h2>The Three Core Arrays — What Each One Does</h2>
+  </div>
+  <div class="vars">
+    <div class="var-box">
+      <div class="var-name">key[ ]</div>
+      <div class="var-type">int[V] — initialized to sys.maxsize (∞)</div>
+      <div class="var-desc">
+        Stores the <b>minimum edge weight</b> needed to connect each vertex to the growing MST. Think of it as "what's the cheapest ticket to get vertex v into the MST right now?"
+      </div>
+      <div class="var-example">
+        key[0] = 0   # free, we start here<br>
+        key[1] = ∞   # not reachable yet<br>
+        key[1] = 2   # after finding edge 0→1
+      </div>
+    </div>
+    <div class="var-box">
+      <div class="var-name">parent[ ]</div>
+      <div class="var-type">int[V] — initialized to None</div>
+      <div class="var-desc">
+        Records <b>which vertex in the MST connects to each vertex</b>. When we finalize the MST, we read this array to know which edges were chosen. This IS the MST.
+      </div>
+      <div class="var-example">
+        parent[0] = -1  # root, no parent<br>
+        parent[1] = 0   # vertex 1 connects via 0<br>
+        parent[2] = 1   # vertex 2 connects via 1
+      </div>
+    </div>
+    <div class="var-box">
+      <div class="var-name">visited[ ]</div>
+      <div class="var-type">bool[V] — initialized to False</div>
+      <div class="var-desc">
+        Tracks <b>which vertices are already in the MST</b>. Once a vertex is marked visited, its key[] and parent[] values are finalized and never change.
+      </div>
+      <div class="var-example">
+        visited[0] = True   # added to MST<br>
+        visited[1] = False  # still outside MST<br>
+        visited[1] = True   # after picking vertex 1
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 4: INTERACTIVE WALKTHROUGH ── -->
+<div class="section" id="s-walk">
+  <div class="sec-head">
+    <span class="sec-num">04</span>
+    <h2>Interactive Step-by-Step Walkthrough</h2>
+  </div>
+
+  <div class="stepper-shell">
+    <div class="stepper-top">
+      <div>
+        <div class="stepper-title">Algorithm Execution</div>
+        <div class="step-counter">Step <b id="sNum">0</b> / <b>6</b></div>
+      </div>
+      <div class="step-btn-row">
+        <button class="sbtn" id="bPrev" onclick="go(-1)" disabled>← Prev</button>
+        <button class="sbtn go" id="bNext" onclick="go(1)">Next →</button>
+        <button class="sbtn" onclick="goTo(0)">↺ Reset</button>
+      </div>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progBar" style="width:0%"></div></div>
+
+    <div class="stepper-body">
+
+      <!-- Step description -->
+      <div class="step-info" id="stepInfo">
+        <div class="step-icon" id="stepIcon">🚀</div>
+        <div class="step-info-content">
+          <div class="step-info-title" id="stepTitle">Initial State</div>
+          <div class="step-info-text" id="stepText">Loading...</div>
+        </div>
+      </div>
+
+      <!-- Graph + Table -->
+      <div class="vis-grid">
+        <div class="graph-panel">
+          <div class="panel-label">// Graph Visualization</div>
+          <svg viewBox="0 0 340 280" id="mainSvg">
+            <defs>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <g id="svgEdges"></g>
+            <g id="svgNodes"></g>
+          </svg>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--cyan)"></div>Current (u)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>In MST</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>Updated (v)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#1a1a28"></div>Unvisited</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="table-panel">
+            <table class="state-tbl">
+              <thead>
+                <tr>
+                  <th>VTX</th>
+                  <th>key[ ]</th>
+                  <th>parent[ ]</th>
+                  <th>visited</th>
+                  <th>STATUS</th>
+                </tr>
+              </thead>
+              <tbody id="stateTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Arrays visual -->
+      <div class="arrays-row">
+        <div class="arr-box">
+          <div class="arr-box-label">KEY[]</div>
+          <div class="arr-cells" id="arrKey"></div>
+        </div>
+        <div class="arr-box">
+          <div class="arr-box-label">PARENT[]</div>
+          <div class="arr-cells" id="arrParent"></div>
+        </div>
+        <div class="arr-box">
+          <div class="arr-box-label">VISITED[]</div>
+          <div class="arr-cells" id="arrVisited"></div>
+        </div>
+      </div>
+
+      <!-- Log -->
+      <div class="log-box">
+        <div class="log-title">// What Happened This Step</div>
+        <div class="log-entries" id="logEntries"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 5: ADJACENCY MATRIX ── -->
+<div class="section" id="s-matrix">
+  <div class="sec-head">
+    <span class="sec-num">05</span>
+    <h2>Adjacency Matrix — The Data Structure</h2>
+  </div>
+  <div class="card">
+    <p style="color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:12px;margin-bottom:20px;">
+      mat[i][j] = weight of edge between i and j. mat[i][j]=0 means no edge. <br>
+      Matrix is symmetric since graph is undirected. MST edges are <span style="color:var(--green)">highlighted green</span>.
+    </p>
+    <div class="matrix-wrap">
+      <table class="adj-matrix" id="adjMatrix"></table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Why use a Matrix vs Adjacency List?</div>
+    <table class="cmp-table">
+      <thead><tr><th>PROPERTY</th><th>ADJACENCY MATRIX</th><th>ADJACENCY LIST</th></tr></thead>
+      <tbody>
+        <tr><td>Space</td><td class="bad">O(V²) — always V×V</td><td class="good">O(V + E) — only real edges</td></tr>
+        <tr><td>Edge lookup</td><td class="good">O(1) — mat[u][v]</td><td class="bad">O(degree) — scan list</td></tr>
+        <tr><td>Best for</td><td class="meh">Dense graphs (many edges)</td><td class="good">Sparse graphs (few edges)</td></tr>
+        <tr><td>Prim's time</td><td class="bad">O(V²) with linear scan</td><td class="good">O(E log V) with min-heap</td></tr>
+        <tr><td>This graph (V=5, E=7)</td><td class="meh">Works fine</td><td class="good">Would be more efficient</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── SECTION 6: CODE ── -->
+<div class="section" id="s-code">
+  <div class="sec-head">
+    <span class="sec-num">06</span>
+    <h2>Code — Line by Line Breakdown</h2>
+  </div>
+
+  <div class="code-area">
+    <div class="code-header">
+      <div class="code-dots">
+        <span style="background:#ff5f56"></span>
+        <span style="background:#febc2e"></span>
+        <span style="background:#27c840"></span>
+      </div>
+      <span class="code-file">prim_mst.py — __init__ and add_edge</span>
+    </div>
+    <div class="code-body"><pre><span class="ln"> 1</span><span class="kw">class</span> <span class="fn">Graph</span>:
+<span class="ln"> 2</span>  <span class="kw">def</span> <span class="fn">__init__</span>(self, <span class="var">vertex</span>):
+<span class="ln"> 3</span>    <span class="cm"># V×V matrix, all zeros = no edges yet</span>
+<span class="ln"> 4</span>    self.<span class="var">mat</span> = [[<span class="num">0</span>] * <span class="var">vertex</span> <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="var">vertex</span>)]
+<span class="ln"> 5</span>    self.<span class="var">size</span> = <span class="var">vertex</span>
+<span class="ln"> 6</span>
+<span class="ln"> 7</span>  <span class="kw">def</span> <span class="fn">add_edge</span>(self, <span class="var">src</span>, <span class="var">dest</span>, <span class="var">weight</span>):
+<span class="ln"> 8</span>    <span class="cm"># bounds check first — defensive coding</span>
+<span class="ln"> 9</span>    <span class="kw">if</span> <span class="num">0</span> <span class="op"><=</span> <span class="var">src</span> <span class="op"><</span> self.<span class="var">size</span> <span class="kw">and</span> <span class="num">0</span> <span class="op"><=</span> <span class="var">dest</span> <span class="op"><</span> self.<span class="var">size</span>:
+<span class="ln">10</span>      self.<span class="var">mat</span>[<span class="var">src</span>][<span class="var">dest</span>] = <span class="var">weight</span>   <span class="cm"># src → dest</span>
+<span class="ln">11</span>      self.<span class="var">mat</span>[<span class="var">dest</span>][<span class="var">src</span>] = <span class="var">weight</span>   <span class="cm"># dest → src (undirected!)</span></pre>
+    </div>
+  </div>
+
+  <div class="code-area">
+    <div class="code-header">
+      <div class="code-dots">
+        <span style="background:#ff5f56"></span>
+        <span style="background:#febc2e"></span>
+        <span style="background:#27c840"></span>
+      </div>
+      <span class="code-file">prim_mst.py — prim_mst() — THE MAIN ALGORITHM</span>
+    </div>
+    <div class="code-body"><pre><span class="ln"> 1</span><span class="kw">def</span> <span class="fn">prim_mst</span>(self):
+<span class="ln"> 2</span>  <span class="cm"># ── SETUP ─────────────────────────────────────────────</span>
+<span class="ln"> 3</span>  <span class="var">key</span>     = [sys.maxsize] * self.<span class="var">size</span>  <span class="cm"># best cost to reach each vertex</span>
+<span class="ln"> 4</span>  <span class="var">parent</span>  = [None]       * self.<span class="var">size</span>  <span class="cm"># MST edge record</span>
+<span class="ln"> 5</span>  <span class="var">visited</span> = [False]      * self.<span class="var">size</span>  <span class="cm"># is vertex in MST?</span>
+<span class="ln"> 6</span>
+<span class="hl-line"><span class="ln"> 7</span>  <span class="var">key</span>[<span class="num">0</span>]    = <span class="num">0</span>   <span class="cm"># start vertex: costs 0 to include</span><span class="ann">★ Entry Point</span></span>
+<span class="hl-line"><span class="ln"> 8</span>  <span class="var">parent</span>[<span class="num">0</span>] = <span class="num">-1</span>  <span class="cm"># root of MST has no parent</span></span>
+<span class="ln"> 9</span>
+<span class="ln">10</span>  <span class="cm"># ── MAIN LOOP: runs V times, adds one vertex per iteration ──</span>
+<span class="ln">11</span>  <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(self.<span class="var">size</span>):          <span class="cm"># V iterations total</span>
+<span class="ln">12</span>
+<span class="hl-line"><span class="ln">13</span>    <span class="var">u</span> = self.<span class="fn">min_key</span>(<span class="var">key</span>, <span class="var">visited</span>)   <span class="cm"># O(V) scan — pick cheapest unvisited</span><span class="ann">★ Greedy Choice</span></span>
+<span class="hl-line"><span class="ln">14</span>    <span class="var">visited</span>[<span class="var">u</span>] = <span class="kw">True</span>                <span class="cm"># u is now permanently in MST</span></span>
+<span class="ln">15</span>
+<span class="ln">16</span>    <span class="cm"># ── CHECK ALL POSSIBLE NEIGHBORS ──────────────────────</span>
+<span class="ln">17</span>    <span class="kw">for</span> <span class="var">v</span> <span class="kw">in</span> <span class="fn">range</span>(self.<span class="var">size</span>):        <span class="cm"># scan entire row u of matrix</span>
+<span class="ln">18</span>
+<span class="hl-line green-line"><span class="ln">19</span>      <span class="kw">if</span> (<span class="num">0</span> <span class="op"><</span> self.<span class="var">mat</span>[<span class="var">u</span>][<span class="var">v</span>]          <span class="cm"># edge exists (non-zero)</span></span>
+<span class="hl-line green-line"><span class="ln">20</span>          <span class="op"><</span> <span class="var">key</span>[<span class="var">v</span>]                    <span class="cm"># AND it's a better path to v</span></span>
+<span class="hl-line green-line"><span class="ln">21</span>          <span class="kw">and not</span> <span class="var">visited</span>[<span class="var">v</span>]):        <span class="cm"># AND v not already in MST</span></span>
+<span class="ln">22</span>
+<span class="hl-line"><span class="ln">23</span>        <span class="var">key</span>[<span class="var">v</span>]    = self.<span class="var">mat</span>[<span class="var">u</span>][<span class="var">v</span>]    <span class="cm"># update: cheaper way found</span><span class="ann">★ Relaxation</span></span>
+<span class="hl-line"><span class="ln">24</span>        <span class="var">parent</span>[<span class="var">v</span>] = <span class="var">u</span>                  <span class="cm"># remember: v connects via u</span></span></pre>
+    </div>
+  </div>
+
+  <div class="code-area">
+    <div class="code-header">
+      <div class="code-dots">
+        <span style="background:#ff5f56"></span>
+        <span style="background:#febc2e"></span>
+        <span style="background:#27c840"></span>
+      </div>
+      <span class="code-file">prim_mst.py — min_key() — The Bottleneck</span>
+    </div>
+    <div class="code-body"><pre><span class="ln"> 1</span><span class="kw">def</span> <span class="fn">min_key</span>(self, <span class="var">key</span>, <span class="var">visited</span>):
+<span class="ln"> 2</span>  <span class="cm"># This linear scan is why the algorithm is O(V²) overall</span>
+<span class="ln"> 3</span>  <span class="cm"># A min-heap would reduce this to O(log V) per call</span>
+<span class="ln"> 4</span>  <span class="var">min_val</span>   = sys.maxsize
+<span class="ln"> 5</span>  <span class="var">min_index</span> = -<span class="num">1</span>
+<span class="ln"> 6</span>  <span class="kw">for</span> <span class="var">v</span> <span class="kw">in</span> <span class="fn">range</span>(self.<span class="var">size</span>):     <span class="cm"># scan ALL V vertices</span>
+<span class="hl-line"><span class="ln"> 7</span>    <span class="kw">if</span> <span class="var">key</span>[<span class="var">v</span>] <span class="op"><</span> <span class="var">min_val</span> <span class="kw">and not</span> <span class="var">visited</span>[<span class="var">v</span>]:<span class="ann">O(V) per call × V calls = O(V²)</span></span>
+<span class="ln"> 8</span>      <span class="var">min_val</span>   = <span class="var">key</span>[<span class="var">v</span>]
+<span class="ln"> 9</span>      <span class="var">min_index</span> = <span class="var">v</span>
+<span class="ln">10</span>  <span class="kw">return</span> <span class="var">min_index</span>               <span class="cm"># index of cheapest unvisited vertex</span></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 7: COMPLEXITY ── -->
+<div class="section" id="s-complex">
+  <div class="sec-head">
+    <span class="sec-num">07</span>
+    <h2>Time &amp; Space Complexity</h2>
+  </div>
+  <div class="card">
+    <table class="cmp-table">
+      <thead><tr><th>PART</th><th>RUNS</th><th>COST EACH</th><th>TOTAL</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Outer loop</td>
+          <td>V times</td>
+          <td>—</td>
+          <td style="color:var(--text)">V</td>
+        </tr>
+        <tr>
+          <td>min_key() scan</td>
+          <td>V times (once per outer loop)</td>
+          <td>O(V)</td>
+          <td class="bad">O(V²)</td>
+        </tr>
+        <tr>
+          <td>Inner neighbor loop</td>
+          <td>V times (once per outer loop)</td>
+          <td>O(V)</td>
+          <td class="bad">O(V²)</td>
+        </tr>
+        <tr>
+          <td><b>Total Time</b></td>
+          <td colspan="2">O(V²) + O(V²)</td>
+          <td class="bad"><b>O(V²)</b></td>
+        </tr>
+        <tr>
+          <td><b>Space</b></td>
+          <td colspan="2">Matrix (V×V) + 3 arrays (V each)</td>
+          <td class="bad"><b>O(V²)</b></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card" style="border-color:rgba(0,255,136,0.15)">
+    <div class="card-title" style="color:var(--green)">How to make it faster → O(E log V)</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim);line-height:2">
+      Replace the linear <code style="color:var(--cyan)">min_key()</code> scan with a <b style="color:var(--text)">min-heap (priority queue)</b>.<br>
+      Replace the adjacency matrix with an <b style="color:var(--text)">adjacency list</b>.<br><br>
+      → Extracting minimum: O(log V) instead of O(V)<br>
+      → Scanning neighbors: O(degree) instead of O(V)<br>
+      → Total: <b style="color:var(--green)">O(E log V)</b> — much faster for sparse graphs where E &lt;&lt; V²
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 8: RESULT ── -->
+<div class="section" id="s-result">
+  <div class="sec-head">
+    <span class="sec-num">08</span>
+    <h2>Final MST — Answer</h2>
+  </div>
+  <div class="mst-result">
+    <div class="mst-edge-list">
+      <div class="mst-edge">
+        <div class="edge-order">#1</div>
+        <div class="edge-nodes">0 ── 1</div>
+        <div class="edge-weight">w = 2</div>
+      </div>
+      <div class="mst-edge">
+        <div class="edge-order">#2</div>
+        <div class="edge-nodes">1 ── 2</div>
+        <div class="edge-weight">w = 3</div>
+      </div>
+      <div class="mst-edge">
+        <div class="edge-order">#3</div>
+        <div class="edge-nodes">1 ── 4</div>
+        <div class="edge-weight">w = 5</div>
+      </div>
+      <div class="mst-edge">
+        <div class="edge-order">#4</div>
+        <div class="edge-nodes">0 ── 3</div>
+        <div class="edge-weight">w = 6</div>
+      </div>
+    </div>
+    <div class="total-box">
+      <div class="tl">// TOTAL MST WEIGHT</div>
+      <div class="tv">16</div>
+      <div class="tu">2 + 3 + 5 + 6</div>
+      <div class="tn">= 4 edges for 5 vertices ✓</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end page -->
+
+<script>
+// ─── graph data ───────────────────────────────────────────────────────
+const N = 5;
+const nodePos = [
+  { id:0, x:80,  y:60  },
+  { id:1, x:240, y:60  },
+  { id:2, x:310, y:170 },
+  { id:3, x:70,  y:200 },
+  { id:4, x:210, y:220 },
+];
+const edgeData = [
+  {u:0,v:1,w:2}, {u:0,v:3,w:6}, {u:1,v:2,w:3},
+  {u:1,v:3,w:8}, {u:1,v:4,w:5}, {u:2,v:4,w:7}, {u:3,v:4,w:9},
+];
+const INF = '∞';
+
+// ─── step data ────────────────────────────────────────────────────────
+const STEPS = [
+  {
+    visited: [], activeU: -1, updatedV: [],
+    mstEdges: [],
+    key:    ['0', INF, INF, INF, INF],
+    parent: ['-1','—','—','—','—'],
+    icon: '🚀',
+    title: 'Initial State — Before Any Iteration',
+    text: `<b>Setup complete.</b> Arrays initialized:\n• key[0]=0 so we start at vertex 0 (costs nothing to add)\n• key[1..4]=∞ (all others "unreachable" for now)\n• parent[0]=-1 (root has no parent)\n• visited[] all False — no one is in the MST yet\n\nThe algorithm will run V=5 iterations.`,
+    logs: [
+      { type:'', text:'key = [0, ∞, ∞, ∞, ∞]' },
+      { type:'', text:'parent = [-1, —, —, —, —]' },
+      { type:'', text:'visited = [F, F, F, F, F]' },
+      { type:'', text:'MST is empty. Ready to start.' },
+    ]
+  },
+  {
+    visited: [0], activeU: 0, updatedV: [1,3],
+    mstEdges: [],
+    key:    ['0','2',INF,'6',INF],
+    parent: ['-1','0','—','0','—'],
+    icon: '🎯',
+    title: 'Iteration 1 — Pick vertex 0 (key=0)',
+    text: `<span class="hl-cyan"><b>u = min_key() → 0</b></span> (only vertex with key=0)\n\n<b>Mark visited[0] = True</b>\n\nScan all neighbors (row 0 of matrix):\n• mat[0][1]=2 — <span class="hl-green">2 < key[1]=∞</span> → update! key[1]=2, parent[1]=0\n• mat[0][2]=0 — no edge, skip\n• <span class="hl-green">mat[0][3]=6 < key[3]=∞</span> → update! key[3]=6, parent[3]=0\n• mat[0][4]=0 — no edge, skip`,
+    logs: [
+      { type:'pick', text:'min_key() → vertex 0 (key=0). Added to MST.' },
+      { type:'update', text:'key[1]: ∞ → 2, parent[1]=0 (edge 0→1, w=2)' },
+      { type:'skip', text:'mat[0][2]=0 — no edge between 0 and 2' },
+      { type:'update', text:'key[3]: ∞ → 6, parent[3]=0 (edge 0→3, w=6)' },
+      { type:'skip', text:'mat[0][4]=0 — no edge between 0 and 4' },
+    ]
+  },
+  {
+    visited: [0,1], activeU: 1, updatedV: [2,4],
+    mstEdges: [{u:0,v:1}],
+    key:    ['0','2','3','6','5'],
+    parent: ['-1','0','1','0','1'],
+    icon: '📍',
+    title: 'Iteration 2 — Pick vertex 1 (key=2)',
+    text: `<span class="hl-cyan"><b>u = min_key() → 1</b></span> (cheapest unvisited: key=2)\n\n<b>MST edge added: 0 → 1 (w=2)</b>\n\nScan neighbors of vertex 1:\n• mat[1][2]=3 — <span class="hl-green">3 < key[2]=∞</span> → update! key[2]=3, parent[2]=1\n• mat[1][3]=8 — 8 > key[3]=6 → <span class="hl-orange">skip! (0→3 is cheaper)</span>\n• <span class="hl-green">mat[1][4]=5 < key[4]=∞</span> → update! key[4]=5, parent[4]=1`,
+    logs: [
+      { type:'pick', text:'min_key() → vertex 1 (key=2). MST edge: 0─1 confirmed.' },
+      { type:'update', text:'key[2]: ∞ → 3, parent[2]=1 (edge 1→2, w=3)' },
+      { type:'skip', text:'mat[1][3]=8 > key[3]=6 — existing path 0→3 is cheaper, skip' },
+      { type:'update', text:'key[4]: ∞ → 5, parent[4]=1 (edge 1→4, w=5)' },
+    ]
+  },
+  {
+    visited: [0,1,2], activeU: 2, updatedV: [],
+    mstEdges: [{u:0,v:1},{u:1,v:2}],
+    key:    ['0','2','3','6','5'],
+    parent: ['-1','0','1','0','1'],
+    icon: '📍',
+    title: 'Iteration 3 — Pick vertex 2 (key=3)',
+    text: `<span class="hl-cyan"><b>u = min_key() → 2</b></span> (cheapest unvisited: key=3)\n\n<b>MST edge added: 1 → 2 (w=3)</b>\n\nScan neighbors of vertex 2:\n• mat[2][4]=7 — 7 > key[4]=5 → <span class="hl-orange">skip! (1→4 at cost 5 is better)</span>\n• All other neighbors (0,1,3) are either visited or have no edge.\n\n<b>No key[] updates this round.</b>`,
+    logs: [
+      { type:'pick', text:'min_key() → vertex 2 (key=3). MST edge: 1─2 confirmed.' },
+      { type:'skip', text:'mat[2][4]=7 > key[4]=5 — vertex 4 already reachable cheaper via 1' },
+      { type:'skip', text:'mat[2][0]=2 — vertex 0 already visited, skip' },
+      { type:'skip', text:'mat[2][1]=3 — vertex 1 already visited, skip' },
+      { type:'', text:'No updates made this iteration.' },
+    ]
+  },
+  {
+    visited: [0,1,2,4], activeU: 4, updatedV: [],
+    mstEdges: [{u:0,v:1},{u:1,v:2},{u:1,v:4}],
+    key:    ['0','2','3','6','5'],
+    parent: ['-1','0','1','0','1'],
+    icon: '📍',
+    title: 'Iteration 4 — Pick vertex 4 (key=5)',
+    text: `<span class="hl-cyan"><b>u = min_key() → 4</b></span> (cheapest unvisited: key=5)\n\n<b>MST edge added: 1 → 4 (w=5)</b>\n\nScan neighbors of vertex 4:\n• mat[4][2]=7 — vertex 2 already visited, skip\n• mat[4][1]=5 — vertex 1 already visited, skip\n• mat[4][3]=9 — 9 > key[3]=6 → <span class="hl-orange">skip! (0→3 at cost 6 is better)</span>\n\n<b>No updates.</b> Only vertex 3 remains.`,
+    logs: [
+      { type:'pick', text:'min_key() → vertex 4 (key=5). MST edge: 1─4 confirmed.' },
+      { type:'skip', text:'mat[4][2]=7 — vertex 2 already visited' },
+      { type:'skip', text:'mat[4][1]=5 — vertex 1 already visited' },
+      { type:'skip', text:'mat[4][3]=9 > key[3]=6 — 0→3 path is cheaper, no update' },
+    ]
+  },
+  {
+    visited: [0,1,2,4,3], activeU: 3, updatedV: [],
+    mstEdges: [{u:0,v:1},{u:1,v:2},{u:1,v:4},{u:0,v:3}],
+    key:    ['0','2','3','6','5'],
+    parent: ['-1','0','1','0','1'],
+    icon: '✅',
+    title: 'Iteration 5 — Pick vertex 3 (key=6) — DONE!',
+    text: `<span class="hl-cyan"><b>u = min_key() → 3</b></span> (only unvisited: key=6)\n\n<b>MST edge added: 0 → 3 (w=6)</b>\n\nAll neighbors of vertex 3 are already visited.\n\n<span class="hl-green"><b>MST COMPLETE! All 5 vertices visited.</b></span>\n4 edges selected. Total weight = 2 + 3 + 5 + 6 = <b>16</b>\n\nRead MST from parent[]: {0→1, 1→2, 1→4, 0→3}`,
+    logs: [
+      { type:'pick', text:'min_key() → vertex 3 (key=6). MST edge: 0─3 confirmed.' },
+      { type:'skip', text:'All neighbors of vertex 3 already visited.' },
+      { type:'mst', text:'✓ MST COMPLETE — All 5 vertices in MST' },
+      { type:'mst', text:'✓ Total weight: 2+3+5+6 = 16' },
+      { type:'mst', text:'✓ Edges: 0─1, 1─2, 1─4, 0─3' },
+    ]
+  },
+];
+
+const TOTAL_STEPS = STEPS.length - 1;
+let cur = 0;
+
+// ─── render functions ──────────────────────────────────────────────────
+function renderGraph(s) {
+  const mstSet = new Set(s.mstEdges.map(e => `${Math.min(e.u,e.v)}-${Math.max(e.u,e.v)}`));
+  const eg = document.getElementById('svgEdges');
+  const ng = document.getElementById('svgNodes');
+  eg.innerHTML = ''; ng.innerHTML = '';
+
+  const ns = 'http://www.w3.org/2000/svg';
+
+  edgeData.forEach(({u,v,w}) => {
+    const key = `${Math.min(u,v)}-${Math.max(u,v)}`;
+    const isMST = mstSet.has(key);
+    const n1 = nodePos[u], n2 = nodePos[v];
+    const mx = (n1.x+n2.x)/2, my = (n1.y+n2.y)/2;
+    const dx = n2.x-n1.x, dy = n2.y-n1.y;
+    const len = Math.sqrt(dx*dx+dy*dy);
+    const off = 18;
+    const x1 = n1.x + dx/len*off, y1 = n1.y + dy/len*off;
+    const x2 = n2.x - dx/len*off, y2 = n2.y - dy/len*off;
+
+    const line = document.createElementNS(ns,'line');
+    line.setAttribute('x1',x1); line.setAttribute('y1',y1);
+    line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+    line.setAttribute('stroke', isMST ? '#00ff88' : '#1e1e30');
+    line.setAttribute('stroke-width', isMST ? '3' : '1.5');
+    if (isMST) line.setAttribute('filter','url(#glow)');
+    eg.appendChild(line);
+
+    const wt = document.createElementNS(ns,'text');
+    const offx = -dy/len*12, offy = dx/len*12;
+    wt.setAttribute('x', mx+offx); wt.setAttribute('y', my+offy+4);
+    wt.setAttribute('fill', isMST ? '#00ff88' : '#2e2e50');
+    wt.setAttribute('font-size','10'); wt.setAttribute('font-family','JetBrains Mono,monospace');
+    wt.setAttribute('text-anchor','middle');
+    wt.textContent = w;
+    eg.appendChild(wt);
+  });
+
+  nodePos.forEach(n => {
+    const isActive  = s.activeU === n.id;
+    const isVisited = s.visited.includes(n.id) && !isActive;
+    const isUpdated = s.updatedV.includes(n.id);
+
+    const fill = isActive ? '#00d4ff' : isVisited ? '#00ff88' : isUpdated ? '#ff7043' : '#1a1a28';
+    const stroke = isActive ? '#00d4ff' : isVisited ? '#00ff88' : isUpdated ? '#ff7043' : '#2e2e50';
+    const textColor = (isActive || isVisited) ? '#000' : '#dde1f0';
+
+    const g = document.createElementNS(ns,'g');
+
+    if (isActive) {
+      for (let r=0; r<2; r++) {
+        const ring = document.createElementNS(ns,'circle');
+        ring.setAttribute('cx',n.x); ring.setAttribute('cy',n.y);
+        ring.setAttribute('r', 24+r*8);
+        ring.setAttribute('fill','none');
+        ring.setAttribute('stroke','#00d4ff');
+        ring.setAttribute('stroke-width','1');
+        ring.setAttribute('opacity', 0.15-r*0.05);
+        g.appendChild(ring);
+      }
+    }
+
+    const c = document.createElementNS(ns,'circle');
+    c.setAttribute('cx',n.x); c.setAttribute('cy',n.y); c.setAttribute('r','16');
+    c.setAttribute('fill', fill); c.setAttribute('stroke', stroke);
+    c.setAttribute('stroke-width','2');
+    if (isActive || isVisited) c.setAttribute('filter','url(#glow)');
+    g.appendChild(c);
+
+    const t = document.createElementNS(ns,'text');
+    t.setAttribute('x',n.x); t.setAttribute('y',n.y+5);
+    t.setAttribute('fill', textColor);
+    t.setAttribute('font-size','13'); t.setAttribute('font-weight','700');
+    t.setAttribute('font-family','JetBrains Mono,monospace');
+    t.setAttribute('text-anchor','middle');
+    t.textContent = n.id;
+    g.appendChild(t);
+
+    ng.appendChild(g);
+  });
+}
+
+function renderTable(s) {
+  const tb = document.getElementById('stateTbody');
+  tb.innerHTML = '';
+  const statusLabel = ['Unvisited','In MST (locked)','Current (u)','Just Updated'];
+  for (let i=0; i<N; i++) {
+    const isActive  = s.activeU === i;
+    const isVisited = s.visited.includes(i) && !isActive;
+    const isUpdated = s.updatedV.includes(i);
+
+    const tr = document.createElement('tr');
+    if (isActive)  tr.classList.add('row-active');
+    if (isVisited) tr.classList.add('row-visited');
+
+    let kClass = isActive ? 'c-selected' : isUpdated ? 'c-updated' : s.key[i]===INF ? 'c-inf' : 'c-normal';
+    let vClass = isVisited || isActive ? 'c-visited' : 'c-notvisited';
+
+    const status = isActive ? `<span style="color:var(--cyan)">◀ selecting</span>`
+                 : isVisited ? `<span style="color:var(--green)">✓ in MST</span>`
+                 : isUpdated ? `<span style="color:var(--orange)">↑ updated</span>`
+                 : `<span style="color:var(--dimmer)">waiting</span>`;
+
+    tr.innerHTML = `
+      <td style="color:var(--text);font-weight:700">${i}</td>
+      <td class="${kClass}">${s.key[i]}</td>
+      <td style="color:var(--purple)">${s.parent[i]}</td>
+      <td class="${vClass}">${isVisited||isActive ? 'true' : 'false'}</td>
+      <td>${status}</td>`;
+    tb.appendChild(tr);
+  }
+}
+
+function renderArrays(s) {
+  const containers = {
+    key:     document.getElementById('arrKey'),
+    parent:  document.getElementById('arrParent'),
+    visited: document.getElementById('arrVisited'),
+  };
+  const vals = {
+    key:     s.key,
+    parent:  s.parent,
+    visited: s.visited.includes.bind(s.visited),
+  };
+
+  ['key','parent'].forEach(arr => {
+    containers[arr].innerHTML = '';
+    for (let i=0; i<N; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'arr-cell';
+      const isActive  = s.activeU === i;
+      const isUpdated = s.updatedV.includes(i);
+      const isVisited = s.visited.includes(i) && !isActive;
+      if (isActive)  cell.classList.add('ac-active');
+      else if (isUpdated) cell.classList.add('ac-updated');
+      else if (isVisited) cell.classList.add('ac-visited');
+      cell.innerHTML = `<span class="ci">[${i}]</span><span class="cv">${vals[arr][i]}</span>`;
+      containers[arr].appendChild(cell);
+    }
+  });
+
+  containers.visited.innerHTML = '';
+  for (let i=0; i<N; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'arr-cell';
+    const isIn = s.visited.includes(i);
+    if (isIn) cell.classList.add('ac-updated');
+    cell.innerHTML = `<span class="ci">[${i}]</span><span class="cv">${isIn ? 'T':'F'}</span>`;
+    containers.visited.appendChild(cell);
+  }
+}
+
+function renderLog(s) {
+  const el = document.getElementById('logEntries');
+  el.innerHTML = '';
+  s.logs.forEach(l => {
+    const d = document.createElement('div');
+    d.className = 'log-entry' + (l.type ? ' le-'+l.type : '');
+    d.textContent = l.text;
+    el.appendChild(d);
+  });
+}
+
+function renderInfo(s) {
+  document.getElementById('stepIcon').textContent = s.icon;
+  document.getElementById('stepTitle').textContent = s.title;
+  document.getElementById('stepText').innerHTML = s.text.replace(/\n/g,'<br>');
+}
+
+function renderProgress() {
+  document.getElementById('sNum').textContent = cur;
+  document.getElementById('progBar').style.width = (cur / TOTAL_STEPS * 100) + '%';
+  document.getElementById('bPrev').disabled = cur === 0;
+  document.getElementById('bNext').disabled = cur === TOTAL_STEPS;
+}
+
+function renderAll() {
+  const s = STEPS[cur];
+  renderGraph(s);
+  renderTable(s);
+  renderArrays(s);
+  renderLog(s);
+  renderInfo(s);
+  renderProgress();
+}
+
+function go(d) { cur = Math.max(0, Math.min(TOTAL_STEPS, cur+d)); renderAll(); }
+function goTo(n) { cur = n; renderAll(); }
+
+// ─── adjacency matrix ─────────────────────────────────────────────────
+function buildMatrix() {
+  const mat = Array.from({length:N}, () => Array(N).fill(0));
+  edgeData.forEach(({u,v,w}) => { mat[u][v]=w; mat[v][u]=w; });
+  const mstPairs = new Set(['0-1','1-2','1-4','0-3']);
+
+  const tbl = document.getElementById('adjMatrix');
+  const hdr = document.createElement('thead');
+  let hrw = '<tr><th></th>';
+  for (let i=0;i<N;i++) hrw += `<th>${i}</th>`;
+  hrw += '</tr>'; hdr.innerHTML = hrw; tbl.appendChild(hdr);
+
+  const tbody = document.createElement('tbody');
+  for (let i=0;i<N;i++) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<th>${i}</th>`;
+    for (let j=0;j<N;j++) {
+      const td = document.createElement('td');
+      const key = `${Math.min(i,j)}-${Math.max(i,j)}`;
+      if (i===j) { td.className='diag'; td.textContent='0'; }
+      else if (mat[i][j]===0) { td.className='mz'; td.textContent='0'; }
+      else {
+        td.textContent = mat[i][j];
+        if (mstPairs.has(key)) td.className='mst-cell';
+      }
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+  tbl.appendChild(tbody);
+}
+
+buildMatrix();
+renderAll();
+</script>
+</body>
+</html>

@@ -22,20 +22,22 @@ class Graph:
         # Start with the first vertex
         key[0] = 0
         parent[0] = -1 # First node is always the root of MST
+        
+# u -> current_vertex and v ->neighbor
 
         for _ in range(self.size):
             # Pick the minimum distance vertex from the set of vertices not yet processed
-            u = self.min_key(key, visited)
+            u = self.min_key(key, visited) # ← u is the newly selected vertex to add to MST
             visited[u] = True
 
             # Update key value and parent index of the adjacent vertices
-            for v in range(self.size):
+            for v in range(self.size): # ← v loops over ALL possible vertices
                 # mat[u][v] is non-zero only for adjacent vertices
                 # visited[v] is false for vertices not yet included in MST
                 # Update the key only if mat[u][v] is smaller than key[v]
                 if 0 < self.mat[u][v] < key[v] and not visited[v]:
-                    key[v] = self.mat[u][v]
-                    parent[v] = u
+                    key[v] = self.mat[u][v] # better way found to reach v
+                    parent[v] = u # remember we connect v via u
 
         self.print_mst(parent)
 

@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kruskal's Algorithm — Deep Dive</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;700&family=Unbounded:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080709;
+  --surface: #100f12;
+  --surface2: #161419;
+  --border: #201e25;
+  --border2: #2c2935;
+  --amber: #ffb300;
+  --amber2: #ff8f00;
+  --green: #69ff47;
+  --red: #ff4d4d;
+  --blue: #4fc3f7;
+  --purple: #ce93d8;
+  --text: #e8e0f0;
+  --dim: #6d6580;
+  --dimmer: #352f42;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'IBM Plex Mono',monospace;
+  font-size:13px;line-height:1.6;
+}
+/* noise overlay */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size:256px;pointer-events:none;z-index:0;opacity:0.6;
+}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+/* ── NAV ── */
+.nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(8,7,9,0.94);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:4px;
+  padding:0 28px;height:50px;overflow-x:auto;
+}
+.nav-brand{font-size:12px;color:var(--amber);letter-spacing:2px;margin-right:14px;white-space:nowrap;font-weight:700;}
+.nav a{
+  font-size:11px;color:var(--dim);text-decoration:none;
+  padding:4px 11px;border-radius:4px;white-space:nowrap;
+  transition:all .15s;border:1px solid transparent;
+}
+.nav a:hover{color:var(--amber);border-color:var(--border2);}
+
+/* ── PAGE ── */
+.page{position:relative;z-index:1;max-width:1140px;margin:0 auto;padding:0 24px 100px;}
+
+/* ── HERO ── */
+.hero{
+  padding:60px 0 44px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:52px;
+  display:grid;grid-template-columns:1fr auto;gap:32px;align-items:end;
+}
+@media(max-width:640px){.hero{grid-template-columns:1fr;}}
+.hero-tag{font-size:10px;letter-spacing:4px;color:var(--amber);text-transform:uppercase;margin-bottom:12px;}
+.hero h1{
+  font-family:'Unbounded',sans-serif;
+  font-size:clamp(32px,5.5vw,66px);
+  font-weight:900;line-height:1;letter-spacing:-2px;color:#fff;
+}
+.hero h1 em{font-style:normal;color:var(--amber);}
+.hero-sub{margin-top:16px;font-size:12px;color:var(--dim);line-height:1.9;max-width:500px;}
+.hero-pills{display:flex;gap:7px;flex-wrap:wrap;margin-top:20px;}
+.pill{
+  font-size:10px;padding:4px 11px;
+  border:1px solid var(--border2);border-radius:100px;color:var(--dim);
+}
+.pill.hi{border-color:var(--amber);color:var(--amber);}
+.pill.hi2{border-color:var(--green);color:var(--green);}
+.hero-stats{display:flex;flex-direction:column;gap:9px;}
+.stat{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:13px 20px;text-align:right;min-width:125px;
+}
+.stat .sv{font-family:'Unbounded',sans-serif;font-size:26px;font-weight:900;color:var(--amber);letter-spacing:-1px;}
+.stat .sl{font-size:9px;color:var(--dim);letter-spacing:2px;margin-top:2px;}
+
+/* ── SECTION ── */
+.section{margin-bottom:60px;}
+.sec-head{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:24px;padding-bottom:12px;
+  border-bottom:1px solid var(--border);
+}
+.sec-num{
+  font-size:10px;color:var(--amber);
+  background:rgba(255,179,0,0.08);
+  border:1px solid rgba(255,179,0,0.2);
+  border-radius:5px;padding:4px 10px;letter-spacing:1px;
+}
+.sec-head h2{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:700;}
+
+/* ── CARD ── */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:22px;margin-bottom:14px;
+}
+.card-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px;}
+
+/* ── CONCEPTS ── */
+.concepts{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;}
+.concept{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:20px;position:relative;overflow:hidden;
+}
+.concept::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.concept.c1::after{background:var(--amber);}
+.concept.c2::after{background:var(--green);}
+.concept.c3::after{background:var(--blue);}
+.concept.c4::after{background:var(--purple);}
+.concept-icon{font-size:20px;margin-bottom:10px;}
+.concept h3{font-family:'Unbounded',sans-serif;font-size:11px;margin-bottom:8px;}
+.concept p{font-size:11px;color:var(--dim);line-height:1.75;}
+.concept code{background:rgba(255,255,255,0.05);border-radius:3px;padding:1px 5px;color:var(--amber);}
+
+/* ── ANALOGY ── */
+.analogy{
+  background:linear-gradient(135deg,rgba(255,179,0,0.05),rgba(105,255,71,0.04));
+  border:1px solid rgba(255,179,0,0.15);
+  border-radius:12px;padding:26px;margin-bottom:14px;
+}
+.analogy-label{font-size:10px;letter-spacing:3px;color:var(--amber);text-transform:uppercase;margin-bottom:10px;}
+.analogy p{font-size:13px;color:var(--text);line-height:1.85;font-family:'IBM Plex Mono',monospace;}
+.analogy strong{color:var(--amber);}
+
+/* ── VS BOX (Prim vs Kruskal) ── */
+.vs-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:600px){.vs-grid{grid-template-columns:1fr;}}
+.vs-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:18px;}
+.vs-box.active{border-color:rgba(255,179,0,0.35);background:rgba(255,179,0,0.04);}
+.vs-box h3{font-family:'Unbounded',sans-serif;font-size:11px;margin-bottom:12px;}
+.vs-box h3.amber{color:var(--amber);}
+.vs-box h3.dim{color:var(--dim);}
+.vs-row{display:flex;gap:8px;margin-bottom:6px;align-items:baseline;}
+.vs-dot{width:5px;height:5px;border-radius:50%;background:var(--amber);flex-shrink:0;margin-top:5px;}
+.vs-dot.dim{background:var(--dimmer);}
+.vs-text{font-size:11px;color:var(--dim);line-height:1.6;}
+.vs-text b{color:var(--text);}
+
+/* ── UNION-FIND ── */
+.uf-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:600px){.uf-grid{grid-template-columns:1fr;}}
+.uf-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px;}
+.uf-name{font-family:'Unbounded',sans-serif;font-size:13px;color:var(--amber);margin-bottom:5px;}
+.uf-sig{font-size:10px;color:var(--dim);margin-bottom:12px;letter-spacing:1px;}
+.uf-desc{font-size:11px;color:var(--dim);line-height:1.75;margin-bottom:12px;}
+.uf-desc b{color:var(--text);}
+.uf-ex{
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:6px;padding:10px 12px;
+  font-size:11px;color:var(--green);line-height:1.9;
+}
+
+/* ── DSU visual ── */
+.dsu-vis{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;}
+.dsu-node{
+  background:var(--bg);border:1px solid var(--border2);
+  border-radius:7px;padding:8px 14px;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  transition:all .3s;
+}
+.dsu-node.merged{border-color:rgba(255,179,0,0.4);background:rgba(255,179,0,0.06);}
+.dsu-node .dn-id{font-family:'Unbounded',sans-serif;font-size:13px;color:var(--text);}
+.dsu-node .dn-par{font-size:10px;color:var(--dim);}
+.dsu-node .dn-rnk{font-size:9px;color:var(--dimmer);}
+
+/* ── SORTED EDGES ── */
+.edges-list{display:flex;flex-direction:column;gap:6px;}
+.edge-item{
+  display:grid;grid-template-columns:32px 1fr auto auto;
+  align-items:center;gap:12px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:10px 16px;
+  transition:all .3s;
+}
+.edge-item.ei-added{border-color:rgba(105,255,71,0.35);background:rgba(105,255,71,0.05);}
+.edge-item.ei-skipped{opacity:0.4;}
+.edge-item.ei-current{border-color:rgba(255,179,0,0.5);background:rgba(255,179,0,0.07);}
+.edge-item.ei-pending{}
+.ei-rank{font-size:10px;color:var(--dimmer);}
+.ei-nodes{font-size:14px;font-weight:700;color:var(--text);}
+.ei-weight{
+  font-size:12px;color:var(--dim);
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:5px;padding:3px 10px;
+}
+.ei-status{font-size:10px;letter-spacing:1px;text-align:right;min-width:60px;}
+.ei-status.s-added{color:var(--green);}
+.ei-status.s-skip{color:var(--red);}
+.ei-status.s-now{color:var(--amber);}
+.ei-status.s-wait{color:var(--dimmer);}
+
+/* ── STEPPER ── */
+.stepper-shell{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;
+}
+.stepper-top{
+  background:var(--surface2);border-bottom:1px solid var(--border);
+  padding:16px 22px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+}
+.stepper-title{font-family:'Unbounded',sans-serif;font-size:13px;}
+.step-btn-row{display:flex;align-items:center;gap:8px;}
+.sbtn{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;padding:7px 16px;
+  border-radius:7px;border:1px solid var(--border2);
+  background:transparent;color:var(--text);cursor:pointer;transition:all .15s;
+}
+.sbtn:hover:not(:disabled){border-color:var(--amber);color:var(--amber);}
+.sbtn.go{background:var(--amber);color:#000;border-color:var(--amber);font-weight:700;}
+.sbtn.go:hover{background:var(--amber2);}
+.sbtn:disabled{opacity:.25;cursor:default;}
+.step-counter{font-size:11px;color:var(--dim);}
+.step-counter b{color:var(--amber);}
+.prog-wrap{height:3px;background:var(--border);}
+.prog-fill{height:100%;background:var(--amber);transition:width .4s ease;}
+.stepper-body{padding:22px;}
+
+/* step info */
+.step-info{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:18px;margin-bottom:18px;
+  display:grid;grid-template-columns:auto 1fr;gap:14px;
+}
+.step-icon{
+  width:42px;height:42px;border-radius:50%;
+  background:rgba(255,179,0,0.1);border:1px solid rgba(255,179,0,0.25);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+}
+.step-info-title{font-family:'Unbounded',sans-serif;font-size:12px;color:var(--amber);margin-bottom:6px;}
+.step-info-text{font-size:11.5px;color:var(--dim);line-height:1.8;}
+.step-info-text b{color:var(--text);}
+.hl-a{color:var(--amber);}
+.hl-g{color:var(--green);}
+.hl-r{color:var(--red);}
+.hl-b{color:var(--blue);}
+
+/* 3-panel layout */
+.tri-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;margin-bottom:14px;}
+@media(max-width:800px){.tri-grid{grid-template-columns:1fr;}}
+
+/* graph panel */
+.graph-panel{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:14px;
+}
+.panel-label{font-size:9px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:10px;}
+#mainSvg{width:100%;height:auto;display:block;}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--dim);}
+.legend-dot{width:9px;height:9px;border-radius:50%;}
+
+/* DSU state */
+.dsu-panel{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;}
+.dsu-panel-title{font-size:9px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:12px;}
+.dsu-state-rows{display:flex;flex-direction:column;gap:6px;}
+.dsu-row{
+  display:grid;grid-template-columns:28px 1fr 60px;
+  align-items:center;gap:8px;
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:6px;padding:7px 10px;transition:all .3s;
+}
+.dsu-row.dr-same{border-color:rgba(255,77,77,0.3);background:rgba(255,77,77,0.05);}
+.dsu-row.dr-merged{border-color:rgba(105,255,71,0.3);background:rgba(105,255,71,0.05);}
+.dr-id{font-size:12px;font-weight:700;color:var(--text);}
+.dr-chain{font-size:10px;color:var(--dim);font-family:'IBM Plex Mono',monospace;}
+.dr-chain span{color:var(--amber);}
+.dr-root{font-size:10px;color:var(--blue);}
+
+/* sorted edges mini */
+.edges-mini{display:flex;flex-direction:column;gap:5px;}
+.em-item{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:6px;padding:6px 10px;transition:all .3s;
+}
+.em-item.emi-done{opacity:.4;}
+.em-item.emi-cur{border-color:rgba(255,179,0,0.5);background:rgba(255,179,0,0.07);}
+.em-item.emi-added{border-color:rgba(105,255,71,0.3);background:rgba(105,255,71,0.05);}
+.em-item.emi-skip{border-color:rgba(255,77,77,0.3);background:rgba(255,77,77,0.05);}
+.em-nodes{font-size:12px;font-weight:700;color:var(--text);flex:1;}
+.em-w{font-size:10px;color:var(--dim);}
+.em-tag{font-size:9px;letter-spacing:1px;}
+.em-tag.tg-a{color:var(--green);}
+.em-tag.tg-s{color:var(--red);}
+.em-tag.tg-c{color:var(--amber);}
+.em-tag.tg-p{color:var(--dimmer);}
+
+/* log */
+.log-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:14px;}
+.log-title{font-size:9px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:10px;}
+.log-entries{display:flex;flex-direction:column;gap:5px;}
+.log-entry{
+  font-size:11px;color:var(--dim);
+  padding:6px 10px;border-radius:5px;
+  border-left:2px solid var(--border);
+  background:rgba(255,255,255,0.015);line-height:1.5;
+}
+.le-add{border-color:var(--green);color:var(--text);}
+.le-skip{border-color:var(--red);}
+.le-find{border-color:var(--amber);}
+.le-done{border-color:var(--blue);color:var(--blue);}
+
+/* ── CODE ── */
+.code-area{
+  background:#060508;border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;margin-bottom:14px;
+}
+.code-header{
+  background:var(--surface2);border-bottom:1px solid var(--border);
+  padding:9px 18px;display:flex;align-items:center;gap:10px;
+}
+.code-dots{display:flex;gap:5px;}
+.code-dots span{width:11px;height:11px;border-radius:50%;}
+.code-file{font-size:10px;color:var(--dim);margin-left:4px;}
+.code-body{
+  padding:22px;font-family:'IBM Plex Mono',monospace;
+  font-size:12px;line-height:2;overflow-x:auto;
+}
+.ln{color:var(--dimmer);user-select:none;width:28px;display:inline-block;}
+.kw{color:#ff79c6;}
+.fn{color:var(--amber);}
+.cm{color:#3d3550;font-style:italic;}
+.str{color:var(--blue);}
+.num{color:var(--green);}
+.var{color:#ffd54f;}
+.op{color:var(--purple);}
+.hl{display:block;margin:0 -22px;padding:0 22px 0 19px;border-left:3px solid var(--amber);background:rgba(255,179,0,0.06);}
+.hl.g{border-color:var(--green);background:rgba(105,255,71,0.05);}
+.hl.r{border-color:var(--red);background:rgba(255,77,77,0.05);}
+.ann{
+  display:inline-block;background:rgba(255,179,0,0.1);
+  border:1px solid rgba(255,179,0,0.2);border-radius:4px;
+  padding:0 7px;margin-left:8px;font-size:10px;color:var(--amber);
+  vertical-align:middle;line-height:1.4;
+}
+
+/* ── COMPLEXITY ── */
+.cmp-table{width:100%;border-collapse:collapse;font-size:11px;}
+.cmp-table th{
+  text-align:left;padding:9px 14px;
+  background:#0a0908;color:var(--dim);
+  font-size:9px;letter-spacing:1.5px;border-bottom:1px solid var(--border);
+}
+.cmp-table td{padding:9px 14px;border-bottom:1px solid var(--border);}
+.cmp-table tr:last-child td{border-bottom:none;}
+.good{color:var(--green);}
+.bad{color:var(--red);}
+.meh{color:var(--amber);}
+
+/* ── MST RESULT ── */
+.mst-result{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:600px){.mst-result{grid-template-columns:1fr;}}
+.mst-edge-list{display:flex;flex-direction:column;gap:7px;}
+.mst-edge{
+  display:flex;align-items:center;gap:12px;
+  background:var(--surface2);border:1px solid rgba(105,255,71,0.15);
+  border-radius:8px;padding:11px 14px;
+}
+.edge-order{font-size:10px;color:var(--dim);width:20px;}
+.edge-nodes{font-family:'Unbounded',sans-serif;font-size:14px;color:var(--green);flex:1;}
+.edge-weight{
+  font-size:11px;color:var(--text);
+  background:rgba(105,255,71,0.07);border:1px solid rgba(105,255,71,0.2);
+  border-radius:4px;padding:2px 10px;
+}
+.total-box{
+  background:linear-gradient(135deg,rgba(255,179,0,0.07),rgba(105,255,71,0.06));
+  border:1px solid rgba(255,179,0,0.2);border-radius:10px;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:24px;
+}
+.total-box .tl{font-size:9px;color:var(--dim);letter-spacing:2px;margin-bottom:8px;}
+.total-box .tv{font-family:'Unbounded',sans-serif;font-size:50px;font-weight:900;color:var(--amber);letter-spacing:-2px;line-height:1;}
+.total-box .tu{font-size:10px;color:var(--dim);margin-top:8px;}
+.total-box .tn{font-size:10px;color:var(--green);margin-top:4px;}
+
+/* ── PROOF STEPS ── */
+.proof-steps{display:flex;flex-direction:column;gap:9px;}
+.proof-step{display:grid;grid-template-columns:30px 1fr;gap:12px;align-items:start;}
+.proof-num{
+  width:30px;height:30px;border-radius:50%;
+  background:rgba(255,179,0,0.1);border:1px solid rgba(255,179,0,0.25);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:var(--amber);flex-shrink:0;
+}
+.proof-text{padding-top:4px;font-size:11.5px;color:var(--dim);line-height:1.7;}
+.proof-text b{color:var(--text);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.section{animation:fadeUp .45s ease both;}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <span class="nav-brand">KRUSKAL'S //</span>
+  <a href="#s-what">What &amp; Why</a>
+  <a href="#s-uf">Union-Find</a>
+  <a href="#s-idea">Core Idea</a>
+  <a href="#s-walk">Walkthrough</a>
+  <a href="#s-edges">Edge Sort</a>
+  <a href="#s-code">Code</a>
+  <a href="#s-complex">Complexity</a>
+  <a href="#s-result">Result</a>
+</nav>
+
+<div class="page">
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div>
+    <div class="hero-tag">// Graph Algorithm · Greedy · DSU</div>
+    <h1>Kruskal's<br><em>Algorithm</em></h1>
+    <div class="hero-sub">
+      Build the Minimum Spanning Tree by sorting all edges and greedily adding them — skipping any that would form a cycle. Uses Union-Find (DSU) to detect cycles in near-constant time.
+    </div>
+    <div class="hero-pills">
+      <div class="pill hi">Greedy</div>
+      <div class="pill hi">O(E log E)</div>
+      <div class="pill hi2">Union-Find (DSU)</div>
+      <div class="pill">Edge-centric</div>
+      <div class="pill">Undirected Weighted</div>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><div class="sv">7</div><div class="sl">EDGES SORTED</div></div>
+    <div class="stat"><div class="sv">4</div><div class="sl">EDGES PICKED</div></div>
+    <div class="stat"><div class="sv" style="color:var(--green)">16</div><div class="sl">MST WEIGHT</div></div>
+  </div>
+</div>
+
+<!-- ── SECTION 1: WHAT & WHY ── -->
+<div class="section" id="s-what">
+  <div class="sec-head"><span class="sec-num">01</span><h2>What is Kruskal's — and How is it Different from Prim's?</h2></div>
+
+  <div class="analogy">
+    <div class="analogy-label">Real World Analogy</div>
+    <p>
+      Imagine you have a list of all possible roads between cities, each with a construction cost.
+      You sort the list from <strong>cheapest to most expensive</strong>.
+      Then you go down the list — build each road if it connects two <strong>previously unconnected regions</strong>.
+      Skip it if both cities are already connected (building it would make a loop).
+      Stop when all cities are in one connected region.
+    </p>
+  </div>
+
+  <div class="vs-grid">
+    <div class="vs-box active">
+      <h3 class="amber">KRUSKAL'S (this page)</h3>
+      <div class="vs-row"><div class="vs-dot"></div><div class="vs-text"><b>Edge-centric:</b> thinks globally about all edges at once</div></div>
+      <div class="vs-row"><div class="vs-dot"></div><div class="vs-text"><b>Step 1:</b> sort ALL edges by weight</div></div>
+      <div class="vs-row"><div class="vs-dot"></div><div class="vs-text"><b>Step 2:</b> greedily add edges, skip if they form a cycle</div></div>
+      <div class="vs-row"><div class="vs-dot"></div><div class="vs-text"><b>Cycle detection:</b> Union-Find in O(α(V)) ≈ O(1)</div></div>
+      <div class="vs-row"><div class="vs-dot"></div><div class="vs-text"><b>Best for:</b> sparse graphs (E &lt;&lt; V²)</div></div>
+      <div class="vs-row"><div class="vs-dot"></div><div class="vs-text"><b>Complexity:</b> O(E log E)</div></div>
+    </div>
+    <div class="vs-box">
+      <h3 class="dim">PRIM'S (for comparison)</h3>
+      <div class="vs-row"><div class="vs-dot dim"></div><div class="vs-text"><b>Vertex-centric:</b> grows one connected tree from a start node</div></div>
+      <div class="vs-row"><div class="vs-dot dim"></div><div class="vs-text"><b>Step 1:</b> pick a start vertex</div></div>
+      <div class="vs-row"><div class="vs-dot dim"></div><div class="vs-text"><b>Step 2:</b> always expand to the cheapest adjacent vertex</div></div>
+      <div class="vs-row"><div class="vs-dot dim"></div><div class="vs-text"><b>Min tracking:</b> min-heap or linear scan</div></div>
+      <div class="vs-row"><div class="vs-dot dim"></div><div class="vs-text"><b>Best for:</b> dense graphs (E ≈ V²)</div></div>
+      <div class="vs-row"><div class="vs-dot dim"></div><div class="vs-text"><b>Complexity:</b> O(E log V) with heap</div></div>
+    </div>
+  </div>
+
+  <div class="concepts">
+    <div class="concept c1">
+      <div class="concept-icon">📋</div>
+      <h3>Sort First</h3>
+      <p>All edges sorted by weight ascending. This is the <code>O(E log E)</code> step. After sorting, we process them in order — cheapest first.</p>
+    </div>
+    <div class="concept c2">
+      <div class="concept-icon">🌲</div>
+      <h3>Forest → Tree</h3>
+      <p>Starts with V separate trees (one per vertex). Each union operation merges two trees. Finishes when there's exactly <code>one tree</code>.</p>
+    </div>
+    <div class="concept c3">
+      <div class="concept-icon">🔗</div>
+      <h3>Cycle = Same Component</h3>
+      <p>An edge creates a cycle <code>if and only if</code> both its endpoints are already in the same component. Union-Find checks this instantly.</p>
+    </div>
+    <div class="concept c4">
+      <div class="concept-icon">🛑</div>
+      <h3>Stop at V−1 Edges</h3>
+      <p>A spanning tree for V vertices needs exactly <code>V−1 = 4 edges</code>. Once we've added that many, the MST is complete.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 2: UNION-FIND ── -->
+<div class="section" id="s-uf">
+  <div class="sec-head"><span class="sec-num">02</span><h2>Union-Find (DSU) — The Secret Weapon</h2></div>
+
+  <div class="analogy" style="border-color:rgba(105,255,71,0.15);">
+    <div class="analogy-label" style="color:var(--green)">What Problem Does Union-Find Solve?</div>
+    <p>
+      We need to answer one question very fast: <strong>"Are vertices u and v in the same connected component?"</strong><br><br>
+      Without DSU: scan the whole graph — O(V+E). Too slow if asked millions of times.<br>
+      With DSU: <strong>O(α(V)) ≈ almost O(1)</strong>, where α is the inverse Ackermann function (effectively ≤ 5 for any realistic input).
+    </p>
+  </div>
+
+  <div class="uf-grid">
+    <div class="uf-box">
+      <div class="uf-name">find(x)</div>
+      <div class="uf-sig">returns the ROOT of x's component</div>
+      <div class="uf-desc">
+        Follows the <b>parent chain</b> from x upward until it reaches a node that is its own parent (the root). Includes <b>path compression</b>: after finding the root, it makes every visited node point directly to the root, flattening the tree for future calls.
+      </div>
+      <div class="uf-ex">
+        # Before find(4):<br>
+        # 4 → 3 → 1 → 1 (root)<br>
+        # After path compression:<br>
+        # 4 → 1, 3 → 1 (flattened!)
+      </div>
+    </div>
+    <div class="uf-box">
+      <div class="uf-name">union(x, y)</div>
+      <div class="uf-sig">merges two components into one</div>
+      <div class="uf-desc">
+        First calls <b>find(x)</b> and <b>find(y)</b>. If same root → they're already connected → skip (would create cycle). Otherwise merges using <b>union by rank</b>: attach the shorter tree under the taller one to keep trees flat and efficient.
+      </div>
+      <div class="uf-ex">
+        # rank[root_x] > rank[root_y]?<br>
+        # → parent[root_y] = root_x<br>
+        # Equal rank?<br>
+        # → parent[root_y] = root_x, rank[root_x]++
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">DSU Arrays — Initial State (each vertex is its own component)</div>
+    <div class="dsu-vis" id="dsuInitVis"></div>
+    <div style="margin-top:10px;font-size:11px;color:var(--dim);line-height:1.8;">
+      <span style="color:var(--amber)">parent[i] = i</span> → vertex i is its own root (5 separate components)<br>
+      <span style="color:var(--blue)">rank[i] = 0</span> → all trees start at height 0
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 3: CORE IDEA ── -->
+<div class="section" id="s-idea">
+  <div class="sec-head"><span class="sec-num">03</span><h2>Core Idea — 3 Steps, That's It</h2></div>
+  <div class="proof-steps">
+    <div class="proof-step">
+      <div class="proof-num">1</div>
+      <div class="proof-text"><b>Sort all edges by weight ascending.</b> For E=7 edges: (0-1,2), (1-2,3), (1-4,5), (0-3,6), (2-4,7), (1-3,8), (3-4,9). This single sort dominates the runtime at O(E log E).</div>
+    </div>
+    <div class="proof-step">
+      <div class="proof-num">2</div>
+      <div class="proof-text"><b>Initialize DSU:</b> parent[i]=i, rank[i]=0 for all i. Each vertex starts as its own isolated tree. We have V=5 components.</div>
+    </div>
+    <div class="proof-step">
+      <div class="proof-num">3</div>
+      <div class="proof-text"><b>Process edges in sorted order.</b> For each edge (u, v, w): call find(u) and find(v). If same root → SKIP (cycle). If different roots → ADD edge to MST, call union(u, v). Stop when MST has V−1=4 edges.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 4: INTERACTIVE WALKTHROUGH ── -->
+<div class="section" id="s-walk">
+  <div class="sec-head"><span class="sec-num">04</span><h2>Interactive Step-by-Step Walkthrough</h2></div>
+
+  <div class="stepper-shell">
+    <div class="stepper-top">
+      <div>
+        <div class="stepper-title">Algorithm Execution</div>
+        <div class="step-counter">Step <b id="sNum">0</b> / <b>8</b></div>
+      </div>
+      <div class="step-btn-row">
+        <button class="sbtn" id="bPrev" onclick="go(-1)" disabled>← Prev</button>
+        <button class="sbtn go" id="bNext" onclick="go(1)">Next →</button>
+        <button class="sbtn" onclick="goTo(0)">↺ Reset</button>
+      </div>
+    </div>
+    <div class="prog-wrap"><div class="prog-fill" id="progBar" style="width:0%"></div></div>
+
+    <div class="stepper-body">
+
+      <div class="step-info">
+        <div class="step-icon" id="stepIcon">📋</div>
+        <div>
+          <div class="step-info-title" id="stepTitle">Initial State</div>
+          <div class="step-info-text" id="stepText">Loading...</div>
+        </div>
+      </div>
+
+      <div class="tri-grid">
+        <!-- Graph -->
+        <div class="graph-panel">
+          <div class="panel-label">// Graph — MST Building</div>
+          <svg viewBox="0 0 340 275" id="mainSvg">
+            <defs>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="b"/>
+                <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <g id="svgEdges"></g>
+            <g id="svgNodes"></g>
+          </svg>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>MST Edge</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div>Considering</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Skipped (cycle)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#201e25"></div>Unused</div>
+          </div>
+        </div>
+
+        <!-- Right column: DSU state + edge list -->
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="dsu-panel">
+            <div class="dsu-panel-title">// Union-Find State</div>
+            <div class="dsu-state-rows" id="dsuStateRows"></div>
+          </div>
+          <div class="dsu-panel">
+            <div class="dsu-panel-title">// Sorted Edge Queue</div>
+            <div class="edges-mini" id="edgesMini"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="log-box">
+        <div class="log-title">// What Happened This Step</div>
+        <div class="log-entries" id="logEntries"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 5: SORTED EDGES ── -->
+<div class="section" id="s-edges">
+  <div class="sec-head"><span class="sec-num">05</span><h2>All Edges — Sorted by Weight</h2></div>
+  <div class="card">
+    <p style="color:var(--dim);font-size:11px;margin-bottom:16px;">
+      Kruskal's processes edges in this exact order. Green = added to MST. Red = skipped (would create cycle).
+    </p>
+    <div class="edges-list">
+      <div class="edge-item ei-added">
+        <div class="ei-rank">#1</div>
+        <div class="ei-nodes">0 ── 1</div>
+        <div class="ei-weight">w = 2</div>
+        <div class="ei-status s-added">✓ ADDED</div>
+      </div>
+      <div class="edge-item ei-added">
+        <div class="ei-rank">#2</div>
+        <div class="ei-nodes">1 ── 2</div>
+        <div class="ei-weight">w = 3</div>
+        <div class="ei-status s-added">✓ ADDED</div>
+      </div>
+      <div class="edge-item ei-added">
+        <div class="ei-rank">#3</div>
+        <div class="ei-nodes">1 ── 4</div>
+        <div class="ei-weight">w = 5</div>
+        <div class="ei-status s-added">✓ ADDED</div>
+      </div>
+      <div class="edge-item ei-added">
+        <div class="ei-rank">#4</div>
+        <div class="ei-nodes">0 ── 3</div>
+        <div class="ei-weight">w = 6</div>
+        <div class="ei-status s-added">✓ ADDED</div>
+      </div>
+      <div class="edge-item ei-skipped">
+        <div class="ei-rank">#5</div>
+        <div class="ei-nodes">2 ── 4</div>
+        <div class="ei-weight">w = 7</div>
+        <div class="ei-status s-skip">✗ SKIP</div>
+      </div>
+      <div class="edge-item ei-skipped">
+        <div class="ei-rank">#6</div>
+        <div class="ei-nodes">1 ── 3</div>
+        <div class="ei-weight">w = 8</div>
+        <div class="ei-status s-skip">✗ SKIP</div>
+      </div>
+      <div class="edge-item ei-skipped">
+        <div class="ei-rank">#7</div>
+        <div class="ei-nodes">3 ── 4</div>
+        <div class="ei-weight">w = 9</div>
+        <div class="ei-status s-skip">✗ SKIP</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Why do we stop at edge #4?</div>
+    <div style="font-size:11.5px;color:var(--dim);line-height:1.9;">
+      A spanning tree of V vertices always has exactly <span style="color:var(--amber)">V−1 = 4 edges</span>. After adding edge #4 (0-3), all 5 vertices are connected in one component. Edges #5, #6, #7 are never even examined — we can exit early.<br><br>
+      Edges #5, #6, #7 shown above as skipped for completeness — in an optimized implementation with early exit, we'd stop processing after the 4th successful union.
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 6: CODE ── -->
+<div class="section" id="s-code">
+  <div class="sec-head"><span class="sec-num">06</span><h2>Code — Line by Line Breakdown</h2></div>
+
+  <div class="code-area">
+    <div class="code-header">
+      <div class="code-dots"><span style="background:#ff5f56"></span><span style="background:#febc2e"></span><span style="background:#27c840"></span></div>
+      <span class="code-file">kruskal.py — Union-Find (DSU) class</span>
+    </div>
+    <div class="code-body"><pre><span class="ln"> 1</span><span class="kw">class</span> <span class="fn">UnionFind</span>:
+<span class="ln"> 2</span>  <span class="kw">def</span> <span class="fn">__init__</span>(self, <span class="var">n</span>):
+<span class="hl"><span class="ln"> 3</span>    self.<span class="var">parent</span> = <span class="fn">list</span>(<span class="fn">range</span>(<span class="var">n</span>))   <span class="cm"># parent[i]=i → each is its own root</span><span class="ann">★ Init</span></span>
+<span class="hl"><span class="ln"> 4</span>    self.<span class="var">rank</span>   = [<span class="num">0</span>] * <span class="var">n</span>           <span class="cm"># rank[i]=0 → all trees have height 0</span></span>
+<span class="ln"> 5</span>
+<span class="ln"> 6</span>  <span class="kw">def</span> <span class="fn">find</span>(self, <span class="var">x</span>):               <span class="cm"># returns root of x's component</span>
+<span class="hl"><span class="ln"> 7</span>    <span class="kw">if</span> self.<span class="var">parent</span>[<span class="var">x</span>] <span class="op">!=</span> <span class="var">x</span>:        <span class="cm"># x is not its own root</span><span class="ann">★ Path Compression</span></span>
+<span class="hl"><span class="ln"> 8</span>      self.<span class="var">parent</span>[<span class="var">x</span>] = self.<span class="fn">find</span>(self.<span class="var">parent</span>[<span class="var">x</span>]) <span class="cm"># recurse + compress</span></span>
+<span class="ln"> 9</span>    <span class="kw">return</span> self.<span class="var">parent</span>[<span class="var">x</span>]          <span class="cm"># return root</span>
+<span class="ln">10</span>
+<span class="ln">11</span>  <span class="kw">def</span> <span class="fn">union</span>(self, <span class="var">x</span>, <span class="var">y</span>):           <span class="cm"># merge components of x and y</span>
+<span class="ln">12</span>    <span class="var">rx</span>, <span class="var">ry</span> = self.<span class="fn">find</span>(<span class="var">x</span>), self.<span class="fn">find</span>(<span class="var">y</span>)
+<span class="hl r"><span class="ln">13</span>    <span class="kw">if</span> <span class="var">rx</span> <span class="op">==</span> <span class="var">ry</span>: <span class="kw">return</span> <span class="kw">False</span>       <span class="cm"># same root = same component = CYCLE!</span><span class="ann">★ Cycle check</span></span>
+<span class="ln">14</span>                                     <span class="cm"># union by rank: attach smaller under larger</span>
+<span class="hl g"><span class="ln">15</span>    <span class="kw">if</span>   self.<span class="var">rank</span>[<span class="var">rx</span>] <span class="op"><</span>  self.<span class="var">rank</span>[<span class="var">ry</span>]: self.<span class="var">parent</span>[<span class="var">rx</span>] = <span class="var">ry</span></span>
+<span class="hl g"><span class="ln">16</span>    <span class="kw">elif</span> self.<span class="var">rank</span>[<span class="var">rx</span>] <span class="op">></span>  self.<span class="var">rank</span>[<span class="var">ry</span>]: self.<span class="var">parent</span>[<span class="var">ry</span>] = <span class="var">rx</span></span>
+<span class="hl g"><span class="ln">17</span>    <span class="kw">else</span>:  self.<span class="var">parent</span>[<span class="var">ry</span>] = <span class="var">rx</span>; self.<span class="var">rank</span>[<span class="var">rx</span>] <span class="op">+=</span> <span class="num">1</span><span class="ann">★ Union by Rank</span></span>
+<span class="ln">18</span>    <span class="kw">return</span> <span class="kw">True</span>                      <span class="cm"># successfully merged — edge is safe</span></pre>
+    </div>
+  </div>
+
+  <div class="code-area">
+    <div class="code-header">
+      <div class="code-dots"><span style="background:#ff5f56"></span><span style="background:#febc2e"></span><span style="background:#27c840"></span></div>
+      <span class="code-file">kruskal.py — kruskal_mst() — THE MAIN ALGORITHM</span>
+    </div>
+    <div class="code-body"><pre><span class="ln"> 1</span><span class="kw">def</span> <span class="fn">kruskal_mst</span>(<span class="var">V</span>, <span class="var">edges</span>):
+<span class="ln"> 2</span>  <span class="cm"># edges = list of (weight, u, v)</span>
+<span class="hl"><span class="ln"> 3</span>  <span class="var">edges</span>.<span class="fn">sort</span>()                     <span class="cm"># O(E log E) — sort by weight (index 0)</span><span class="ann">★ Step 1: Sort</span></span>
+<span class="ln"> 4</span>
+<span class="ln"> 5</span>  <span class="var">uf</span>       = <span class="fn">UnionFind</span>(<span class="var">V</span>)
+<span class="ln"> 6</span>  <span class="var">mst</span>      = []                     <span class="cm"># will hold chosen edges</span>
+<span class="ln"> 7</span>  <span class="var">mst_cost</span> = <span class="num">0</span>
+<span class="ln"> 8</span>
+<span class="ln"> 9</span>  <span class="cm"># ── MAIN LOOP: iterate sorted edges ───────────────────</span>
+<span class="hl"><span class="ln">10</span>  <span class="kw">for</span> <span class="var">w</span>, <span class="var">u</span>, <span class="var">v</span> <span class="kw">in</span> <span class="var">edges</span>:           <span class="cm"># cheapest edge first</span><span class="ann">★ Step 2: Iterate</span></span>
+<span class="ln">11</span>
+<span class="hl r"><span class="ln">12</span>    <span class="kw">if not</span> <span class="var">uf</span>.<span class="fn">union</span>(<span class="var">u</span>, <span class="var">v</span>):        <span class="cm"># union() returns False if same component</span><span class="ann">★ Cycle = skip</span></span>
+<span class="hl r"><span class="ln">13</span>      <span class="kw">continue</span>                     <span class="cm"># would create cycle — skip this edge</span></span>
+<span class="ln">14</span>
+<span class="hl g"><span class="ln">15</span>    <span class="var">mst</span>.<span class="fn">append</span>((<span class="var">u</span>, <span class="var">v</span>, <span class="var">w</span>))         <span class="cm"># safe edge — add to MST</span><span class="ann">★ Add edge</span></span>
+<span class="hl g"><span class="ln">16</span>    <span class="var">mst_cost</span> <span class="op">+=</span> <span class="var">w</span></span>
+<span class="ln">17</span>
+<span class="hl"><span class="ln">18</span>    <span class="kw">if</span> <span class="fn">len</span>(<span class="var">mst</span>) <span class="op">==</span> <span class="var">V</span> <span class="op">-</span> <span class="num">1</span>: <span class="kw">break</span>   <span class="cm"># V-1 edges = MST complete, exit early</span><span class="ann">★ Early stop</span></span>
+<span class="ln">19</span>
+<span class="ln">20</span>  <span class="kw">return</span> <span class="var">mst</span>, <span class="var">mst_cost</span>
+<span class="ln">21</span>
+<span class="ln">22</span><span class="cm"># ── Setup & run ───────────────────────────────────────</span>
+<span class="ln">23</span><span class="var">edges</span> = [
+<span class="ln">24</span>  (<span class="num">2</span>,<span class="num">0</span>,<span class="num">1</span>), (<span class="num">6</span>,<span class="num">0</span>,<span class="num">3</span>), (<span class="num">3</span>,<span class="num">1</span>,<span class="num">2</span>),
+<span class="ln">25</span>  (<span class="num">8</span>,<span class="num">1</span>,<span class="num">3</span>), (<span class="num">5</span>,<span class="num">1</span>,<span class="num">4</span>), (<span class="num">7</span>,<span class="num">2</span>,<span class="num">4</span>), (<span class="num">9</span>,<span class="num">3</span>,<span class="num">4</span>)
+<span class="ln">26</span>]
+<span class="ln">27</span><span class="var">mst</span>, <span class="var">cost</span> = <span class="fn">kruskal_mst</span>(<span class="num">5</span>, <span class="var">edges</span>)</pre>
+    </div>
+  </div>
+
+  <div class="code-area">
+    <div class="code-header">
+      <div class="code-dots"><span style="background:#ff5f56"></span><span style="background:#febc2e"></span><span style="background:#27c840"></span></div>
+      <span class="code-file">kruskal.py — Path Compression visualized (why it matters)</span>
+    </div>
+    <div class="code-body"><pre><span class="cm"># WITHOUT path compression — tree can become a chain:</span>
+<span class="cm">#</span>
+<span class="cm">#   parent = [0, 0, 1, 2, 3]</span>
+<span class="cm">#   find(4): 4→3→2→1→0  (4 hops)</span>
+<span class="cm">#   find(4): 4→3→2→1→0  (4 hops again — nothing saved)</span>
+<span class="cm">#</span>
+<span class="cm"># WITH path compression — tree flattens to a star:</span>
+<span class="cm">#</span>
+<span class="cm">#   find(4): 4→3→2→1→0  (first call: 4 hops)</span>
+<span class="cm">#   parent becomes: [0, 0, 0, 0, 0]  (all point to root!)</span>
+<span class="cm">#   find(4): 4→0  (next call: 1 hop!)</span>
+<span class="cm">#</span>
+<span class="cm"># Combined with union-by-rank, this gives amortized O(α(n))</span>
+<span class="cm"># α = inverse Ackermann. For n ≤ 10^80 (more atoms than universe): α ≤ 5</span>
+<span class="cm"># Effectively: O(1) per operation</span></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 7: COMPLEXITY ── -->
+<div class="section" id="s-complex">
+  <div class="sec-head"><span class="sec-num">07</span><h2>Time &amp; Space Complexity</h2></div>
+  <div class="card" style="border-color:rgba(255,179,0,0.2)">
+    <table class="cmp-table">
+      <thead><tr><th>OPERATION</th><th>HOW MANY TIMES</th><th>COST EACH</th><th>TOTAL</th></tr></thead>
+      <tbody>
+        <tr><td>Sort all edges</td><td>Once</td><td>O(E log E)</td><td class="meh">O(E log E)</td></tr>
+        <tr><td>union(u,v) per edge</td><td>E times</td><td>O(α(V)) ≈ O(1)</td><td class="good">O(E · α(V))</td></tr>
+        <tr><td>find(x) inside union</td><td>2 × E times</td><td>O(α(V)) ≈ O(1)</td><td class="good">O(E · α(V))</td></tr>
+        <tr><td><b>Total Time</b></td><td colspan="2">Dominated by the sort step</td><td class="meh"><b>O(E log E)</b></td></tr>
+        <tr><td><b>Space</b></td><td colspan="2">parent[] + rank[] + mst[]</td><td class="good"><b>O(V + E)</b></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-title">O(E log E) vs O(E log V) — Are They the Same?</div>
+    <div style="font-size:11.5px;color:var(--dim);line-height:1.9;">
+      Yes, essentially. Since E ≤ V², we have log(E) ≤ log(V²) = 2·log(V).<br>
+      So <span style="color:var(--amber)">O(E log E) = O(E log V)</span> — they're equivalent within a constant factor.<br><br>
+      For this graph: E=7, log(7) ≈ 2.8 → Kruskal's does about <span style="color:var(--green)">20 significant operations</span>.<br>
+      Compare to matrix-based Prim's: V² = 25 operations — Kruskal wins on sparse graphs.
+    </div>
+  </div>
+  <div class="card">
+    <table class="cmp-table">
+      <thead><tr><th>ALGORITHM</th><th>TIME</th><th>SPACE</th><th>BEST FOR</th></tr></thead>
+      <tbody>
+        <tr><td>Kruskal's (this)</td><td class="meh">O(E log E)</td><td class="good">O(V + E)</td><td class="good">Sparse graphs</td></tr>
+        <tr><td>Prim's + Heap</td><td class="meh">O(E log V)</td><td class="good">O(V + E)</td><td class="meh">Any graph</td></tr>
+        <tr><td>Prim's + Matrix</td><td class="bad">O(V²)</td><td class="bad">O(V²)</td><td class="meh">Dense graphs</td></tr>
+        <tr><td>Borůvka's</td><td class="good">O(E log V)</td><td class="good">O(V + E)</td><td class="good">Parallel friendly</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── SECTION 8: RESULT ── -->
+<div class="section" id="s-result">
+  <div class="sec-head"><span class="sec-num">08</span><h2>Final MST — Answer</h2></div>
+  <div class="mst-result">
+    <div class="mst-edge-list">
+      <div class="mst-edge"><div class="edge-order">#1</div><div class="edge-nodes">0 ── 1</div><div class="edge-weight">w = 2</div></div>
+      <div class="mst-edge"><div class="edge-order">#2</div><div class="edge-nodes">1 ── 2</div><div class="edge-weight">w = 3</div></div>
+      <div class="mst-edge"><div class="edge-order">#3</div><div class="edge-nodes">1 ── 4</div><div class="edge-weight">w = 5</div></div>
+      <div class="mst-edge"><div class="edge-order">#4</div><div class="edge-nodes">0 ── 3</div><div class="edge-weight">w = 6</div></div>
+    </div>
+    <div class="total-box">
+      <div class="tl">// TOTAL MST WEIGHT</div>
+      <div class="tv">16</div>
+      <div class="tu">2 + 3 + 5 + 6</div>
+      <div class="tn">= 4 edges for 5 vertices ✓</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px;">
+    <div class="card-title">Same MST as Prim's — Is That Always the Case?</div>
+    <div style="font-size:11.5px;color:var(--dim);line-height:1.9;">
+      <b style="color:var(--text)">Yes, when edge weights are unique.</b> If all edge weights are distinct, there is exactly one MST, so any correct algorithm must find it.<br><br>
+      <b style="color:var(--text)">When weights tie:</b> multiple valid MSTs may exist. Prim's and Kruskal's may pick different ones — both are correct (same total weight, different edges). The exact MST found depends on tie-breaking order.
+    </div>
+  </div>
+</div>
+
+</div><!-- end page -->
+
+<script>
+// ─── graph data ───────────────────────────────────────────────────────
+const N = 5;
+const nodePos = [
+  {id:0,x:80,  y:55 },
+  {id:1,x:245, y:55 },
+  {id:2,x:315, y:165},
+  {id:3,x:65,  y:195},
+  {id:4,x:210, y:218},
+];
+const allEdges = [
+  {u:0,v:1,w:2},{u:0,v:3,w:6},{u:1,v:2,w:3},
+  {u:1,v:3,w:8},{u:1,v:4,w:5},{u:2,v:4,w:7},{u:3,v:4,w:9},
+];
+// sorted edge processing order
+const sortedEdges = [
+  {u:0,v:1,w:2,action:'add'},
+  {u:1,v:2,w:3,action:'add'},
+  {u:1,v:4,w:5,action:'add'},
+  {u:0,v:3,w:6,action:'add'},
+  {u:2,v:4,w:7,action:'skip'},
+  {u:1,v:3,w:8,action:'skip'},
+  {u:3,v:4,w:9,action:'skip'},
+];
+
+// ─── DSU simulation ───────────────────────────────────────────────────
+// Pre-computed state at each step
+// parent & rank after each action
+const STEPS = [
+  {
+    icon:'📋', title:'Initial State — Edges Sorted, DSU Initialized',
+    text:`<b>All 7 edges sorted by weight:</b> (0-1,2), (1-2,3), (1-4,5), (0-3,6), (2-4,7), (1-3,8), (3-4,9)<br><b>DSU:</b> parent=[0,1,2,3,4], rank=[0,0,0,0,0] — 5 separate components. MST is empty.`,
+    mstEdges:[],
+    curEdge:null, skipEdge:null,
+    parent:[0,1,2,3,4], rank:[0,0,0,0,0],
+    components:[[0],[1],[2],[3],[4]],
+    edgesDone:[], // indices processed (0-based into sortedEdges)
+    logs:[
+      {t:'',txt:'Sorted edges: (0-1,2) (1-2,3) (1-4,5) (0-3,6) (2-4,7) (1-3,8) (3-4,9)'},
+      {t:'',txt:'parent = [0,1,2,3,4] — each vertex is its own root'},
+      {t:'',txt:'rank   = [0,0,0,0,0]'},
+      {t:'',txt:'MST = [] | Components: {0}{1}{2}{3}{4}'},
+    ]
+  },
+  {
+    icon:'🔍', title:'Edge #1: (0–1, w=2) — find(0)=0, find(1)=1 → DIFFERENT → ADD',
+    text:`<b>find(0)=0</b>, <b>find(1)=1</b>. Different roots → safe to add.<br><b>union(0,1):</b> same rank → parent[1]=0, rank[0]++ → rank[0]=1.<br><span class="hl-g">MST gains edge 0─1 (w=2). Components merge: {0,1}{2}{3}{4}</span>`,
+    mstEdges:[{u:0,v:1}],
+    curEdge:{u:0,v:1}, skipEdge:null,
+    parent:[0,0,2,3,4], rank:[1,0,0,0,0],
+    components:[[0,1],[2],[3],[4]],
+    edgesDone:[0],
+    logs:[
+      {t:'find',txt:'find(0) = 0 (root of its own component)'},
+      {t:'find',txt:'find(1) = 1 (root of its own component)'},
+      {t:'find',txt:'0 ≠ 1 → different components → no cycle'},
+      {t:'add', txt:'union(0,1): rank[0]=rank[1]=0 → parent[1]=0, rank[0]→1'},
+      {t:'add', txt:'✓ Edge 0─1 (w=2) added to MST. MST weight: 2'},
+    ]
+  },
+  {
+    icon:'🔍', title:'Edge #2: (1–2, w=3) — find(1)=0, find(2)=2 → DIFFERENT → ADD',
+    text:`<b>find(1):</b> 1→parent[1]=0, root is 0. <b>find(2)=2</b>. 0≠2 → safe.<br><b>union(1,2):</b> rank[0]=1 > rank[2]=0 → parent[2]=0. rank unchanged.<br><span class="hl-g">MST gains edge 1─2 (w=3). Components: {0,1,2}{3}{4}</span>`,
+    mstEdges:[{u:0,v:1},{u:1,v:2}],
+    curEdge:{u:1,v:2}, skipEdge:null,
+    parent:[0,0,0,3,4], rank:[1,0,0,0,0],
+    components:[[0,1,2],[3],[4]],
+    edgesDone:[0,1],
+    logs:[
+      {t:'find',txt:'find(1) = 0 (1→parent[1]=0, which is root)'},
+      {t:'find',txt:'find(2) = 2 (root of its own component)'},
+      {t:'find',txt:'0 ≠ 2 → different components → no cycle'},
+      {t:'add', txt:'union(1,2): rank[0]=1 > rank[2]=0 → parent[2]=0 (attach smaller under larger)'},
+      {t:'add', txt:'✓ Edge 1─2 (w=3) added to MST. MST weight: 5'},
+    ]
+  },
+  {
+    icon:'🔍', title:'Edge #3: (1–4, w=5) — find(1)=0, find(4)=4 → DIFFERENT → ADD',
+    text:`<b>find(1)=0</b>. <b>find(4)=4</b>. 0≠4 → safe.<br><b>union(1,4):</b> rank[0]=1 > rank[4]=0 → parent[4]=0.<br><span class="hl-g">MST gains edge 1─4 (w=5). Components: {0,1,2,4}{3}</span>`,
+    mstEdges:[{u:0,v:1},{u:1,v:2},{u:1,v:4}],
+    curEdge:{u:1,v:4}, skipEdge:null,
+    parent:[0,0,0,3,0], rank:[1,0,0,0,0],
+    components:[[0,1,2,4],[3]],
+    edgesDone:[0,1,2],
+    logs:[
+      {t:'find',txt:'find(1) = 0 (path: 1→0)'},
+      {t:'find',txt:'find(4) = 4 (root of its own component)'},
+      {t:'find',txt:'0 ≠ 4 → different components → no cycle'},
+      {t:'add', txt:'union(1,4): rank[0]=1 > rank[4]=0 → parent[4]=0'},
+      {t:'add', txt:'✓ Edge 1─4 (w=5) added to MST. MST weight: 10'},
+    ]
+  },
+  {
+    icon:'🔍', title:'Edge #4: (0–3, w=6) — find(0)=0, find(3)=3 → DIFFERENT → ADD',
+    text:`<b>find(0)=0</b>. <b>find(3)=3</b>. 0≠3 → safe.<br><b>union(0,3):</b> rank[0]=1 > rank[3]=0 → parent[3]=0.<br><span class="hl-g">MST gains edge 0─3 (w=6). All 5 vertices connected! MST complete.</span>`,
+    mstEdges:[{u:0,v:1},{u:1,v:2},{u:1,v:4},{u:0,v:3}],
+    curEdge:{u:0,v:3}, skipEdge:null,
+    parent:[0,0,0,0,0], rank:[1,0,0,0,0],
+    components:[[0,1,2,3,4]],
+    edgesDone:[0,1,2,3],
+    logs:[
+      {t:'find',txt:'find(0) = 0'},
+      {t:'find',txt:'find(3) = 3 (still its own root)'},
+      {t:'find',txt:'0 ≠ 3 → different components → no cycle'},
+      {t:'add', txt:'union(0,3): rank[0]=1 > rank[3]=0 → parent[3]=0'},
+      {t:'done',txt:'✓ Edge 0─3 (w=6) added. MST complete! 4 edges, weight=16'},
+    ]
+  },
+  {
+    icon:'🚫', title:'Edge #5: (2–4, w=7) — find(2)=0, find(4)=0 → SAME → SKIP',
+    text:`<b>find(2):</b> 2→parent[2]=0, root=0. <b>find(4):</b> 4→parent[4]=0, root=0.<br>0 == 0 → <span class="hl-r">same component! Adding this edge would create a cycle.</span><br>union() returns False → SKIP. (MST already complete anyway.)`,
+    mstEdges:[{u:0,v:1},{u:1,v:2},{u:1,v:4},{u:0,v:3}],
+    curEdge:null, skipEdge:{u:2,v:4},
+    parent:[0,0,0,0,0], rank:[1,0,0,0,0],
+    components:[[0,1,2,3,4]],
+    edgesDone:[0,1,2,3,4],
+    logs:[
+      {t:'find',txt:'find(2) = 0 (path: 2→parent[2]=0)'},
+      {t:'find',txt:'find(4) = 0 (path: 4→parent[4]=0)'},
+      {t:'find',txt:'0 == 0 → SAME component → adding would create cycle!'},
+      {t:'skip',txt:'✗ Edge 2─4 (w=7) SKIPPED'},
+    ]
+  },
+  {
+    icon:'🚫', title:'Edge #6: (1–3, w=8) — find(1)=0, find(3)=0 → SAME → SKIP',
+    text:`<b>find(1)=0</b>. <b>find(3)=0</b>. Same root → cycle → skip.<br>1 and 3 are already connected via path 1→0→3.`,
+    mstEdges:[{u:0,v:1},{u:1,v:2},{u:1,v:4},{u:0,v:3}],
+    curEdge:null, skipEdge:{u:1,v:3},
+    parent:[0,0,0,0,0], rank:[1,0,0,0,0],
+    components:[[0,1,2,3,4]],
+    edgesDone:[0,1,2,3,4,5],
+    logs:[
+      {t:'find',txt:'find(1) = 0'},
+      {t:'find',txt:'find(3) = 0'},
+      {t:'find',txt:'0 == 0 → SAME component → cycle'},
+      {t:'skip',txt:'✗ Edge 1─3 (w=8) SKIPPED'},
+    ]
+  },
+  {
+    icon:'✅', title:'Edge #7: (3–4, w=9) — find(3)=0, find(4)=0 → SAME → SKIP — DONE',
+    text:`<b>find(3)=0</b>. <b>find(4)=0</b>. Same root → skip.<br><span class="hl-g">All edges processed. MST = {0─1, 1─2, 1─4, 0─3} with total weight 2+3+5+6 = <b>16</b>.</span><br>Note: with early exit after 4th edge added, we'd never reach this step in practice.`,
+    mstEdges:[{u:0,v:1},{u:1,v:2},{u:1,v:4},{u:0,v:3}],
+    curEdge:null, skipEdge:{u:3,v:4},
+    parent:[0,0,0,0,0], rank:[1,0,0,0,0],
+    components:[[0,1,2,3,4]],
+    edgesDone:[0,1,2,3,4,5,6],
+    logs:[
+      {t:'find',txt:'find(3) = 0'},
+      {t:'find',txt:'find(4) = 0'},
+      {t:'skip',txt:'✗ Edge 3─4 (w=9) SKIPPED — cycle'},
+      {t:'done',txt:'✓ ALL EDGES PROCESSED. MST complete. Weight = 16'},
+    ]
+  },
+];
+const TOTAL = STEPS.length - 1;
+let cur = 0;
+
+// ─── render graph ─────────────────────────────────────────────────────
+function renderGraph(s) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const eg = document.getElementById('svgEdges');
+  const ng = document.getElementById('svgNodes');
+  eg.innerHTML=''; ng.innerHTML='';
+
+  const mstSet = new Set(s.mstEdges.map(e=>`${Math.min(e.u,e.v)}-${Math.max(e.u,e.v)}`));
+  const curKey = s.curEdge ? `${Math.min(s.curEdge.u,s.curEdge.v)}-${Math.max(s.curEdge.u,s.curEdge.v)}` : '';
+  const skipKey = s.skipEdge ? `${Math.min(s.skipEdge.u,s.skipEdge.v)}-${Math.max(s.skipEdge.u,s.skipEdge.v)}` : '';
+
+  allEdges.forEach(({u,v,w})=>{
+    const key = `${Math.min(u,v)}-${Math.max(u,v)}`;
+    const isMST = mstSet.has(key);
+    const isCur = key===curKey;
+    const isSkip = key===skipKey;
+    const n1=nodePos[u], n2=nodePos[v];
+    const dx=n2.x-n1.x, dy=n2.y-n1.y, len=Math.sqrt(dx*dx+dy*dy);
+    const off=18;
+    const x1=n1.x+dx/len*off, y1=n1.y+dy/len*off;
+    const x2=n2.x-dx/len*off, y2=n2.y-dy/len*off;
+    const mx=(n1.x+n2.x)/2, my=(n1.y+n2.y)/2;
+    const ox=-dy/len*11, oy=dx/len*11;
+
+    const stroke = isMST ? '#69ff47' : isCur ? '#ffb300' : isSkip ? '#ff4d4d' : '#201e25';
+    const sw = isMST ? 2.5 : isCur||isSkip ? 2 : 1.5;
+
+    const line = document.createElementNS(NS,'line');
+    line.setAttribute('x1',x1);line.setAttribute('y1',y1);
+    line.setAttribute('x2',x2);line.setAttribute('y2',y2);
+    line.setAttribute('stroke',stroke);line.setAttribute('stroke-width',sw);
+    if(isMST||isCur) line.setAttribute('filter','url(#glow)');
+    if(isSkip) line.setAttribute('stroke-dasharray','5,3');
+    eg.appendChild(line);
+
+    const wt = document.createElementNS(NS,'text');
+    wt.setAttribute('x',mx+ox);wt.setAttribute('y',my+oy+4);
+    wt.setAttribute('fill',isMST?'#69ff47':isCur?'#ffb300':isSkip?'#ff4d4d':'#2c2935');
+    wt.setAttribute('font-size','10');wt.setAttribute('font-family','IBM Plex Mono,monospace');
+    wt.setAttribute('text-anchor','middle');wt.textContent=w;
+    eg.appendChild(wt);
+  });
+
+  // component coloring — assign each component a subtle color
+  const compColors = ['rgba(255,179,0,0.15)','rgba(79,195,247,0.15)','rgba(206,147,216,0.15)','rgba(105,255,71,0.15)','rgba(255,77,77,0.15)'];
+  const nodeComp = Array(N).fill(0);
+  s.components.forEach((comp,ci)=>comp.forEach(v=>nodeComp[v]=ci));
+
+  nodePos.forEach(n=>{
+    const inMST = s.mstEdges.some(e=>e.u===n.id||e.v===n.id);
+    const isCurNode = s.curEdge&&(s.curEdge.u===n.id||s.curEdge.v===n.id);
+    const isSkipNode = s.skipEdge&&(s.skipEdge.u===n.id||s.skipEdge.v===n.id);
+    const ci = nodeComp[n.id];
+
+    const fill = isCurNode ? '#ffb300' : isSkipNode ? '#ff4d4d' : inMST ? '#69ff47' : '#1a1824';
+    const stroke2 = isCurNode ? '#ffb300' : isSkipNode ? '#ff4d4d' : inMST ? '#69ff47' : '#2c2935';
+    const tc = (isCurNode||inMST) && !isSkipNode ? '#000' : '#e8e0f0';
+
+    const g = document.createElementNS(NS,'g');
+    if(isCurNode||inMST){
+      const ring = document.createElementNS(NS,'circle');
+      ring.setAttribute('cx',n.x);ring.setAttribute('cy',n.y);ring.setAttribute('r','22');
+      ring.setAttribute('fill','none');ring.setAttribute('stroke',stroke2);
+      ring.setAttribute('stroke-width','1');ring.setAttribute('opacity','0.3');
+      g.appendChild(ring);
+    }
+    const c = document.createElementNS(NS,'circle');
+    c.setAttribute('cx',n.x);c.setAttribute('cy',n.y);c.setAttribute('r','15');
+    c.setAttribute('fill',fill);c.setAttribute('stroke',stroke2);c.setAttribute('stroke-width','2');
+    if(isCurNode||inMST) c.setAttribute('filter','url(#glow)');
+    g.appendChild(c);
+    const t = document.createElementNS(NS,'text');
+    t.setAttribute('x',n.x);t.setAttribute('y',n.y+5);
+    t.setAttribute('fill',tc);t.setAttribute('font-size','12');t.setAttribute('font-weight','700');
+    t.setAttribute('font-family','IBM Plex Mono,monospace');t.setAttribute('text-anchor','middle');
+    t.textContent=n.id;
+    g.appendChild(t);
+    ng.appendChild(g);
+  });
+}
+
+// ─── render DSU state ─────────────────────────────────────────────────
+function renderDSU(s) {
+  const el = document.getElementById('dsuStateRows');
+  el.innerHTML='';
+  for(let i=0;i<N;i++){
+    const root = findRoot(s.parent, i);
+    const inSameAsU = s.curEdge && findRoot(s.parent,s.curEdge.u)===root && findRoot(s.parent,s.curEdge.v)===root;
+    const isMerged = s.mstEdges.some(e=>e.u===i||e.v===i);
+
+    const row = document.createElement('div');
+    row.className='dsu-row'+(inSameAsU&&s.skipEdge?' dr-same':isMerged?' dr-merged':'');
+    const chain = getChain(s.parent, i);
+
+    row.innerHTML=`
+      <div class="dr-id">${i}</div>
+      <div class="dr-chain">parent: ${chain}</div>
+      <div class="dr-root">root=${root}</div>`;
+    el.appendChild(row);
+  }
+}
+
+function findRoot(parent, x){
+  while(parent[x]!==x) x=parent[x];
+  return x;
+}
+function getChain(parent, x){
+  let chain=`${x}`;
+  let v=x;
+  while(parent[v]!==v){ v=parent[v]; chain+=`→<span>${v}</span>`; }
+  return chain;
+}
+
+// ─── render edge mini list ────────────────────────────────────────────
+function renderEdgesMini(s) {
+  const el = document.getElementById('edgesMini');
+  el.innerHTML='';
+  const doneSet = new Set(s.edgesDone);
+  const curKey = s.curEdge ? `${Math.min(s.curEdge.u,s.curEdge.v)}-${Math.max(s.curEdge.u,s.curEdge.v)}` : '';
+  const skipKey = s.skipEdge ? `${Math.min(s.skipEdge.u,s.skipEdge.v)}-${Math.max(s.skipEdge.u,s.skipEdge.v)}` : '';
+  const mstSet = new Set(s.mstEdges.map(e=>`${Math.min(e.u,e.v)}-${Math.max(e.u,e.v)}`));
+
+  sortedEdges.forEach((e,i)=>{
+    const key=`${Math.min(e.u,e.v)}-${Math.max(e.u,e.v)}`;
+    const isCur=key===curKey;
+    const isSkip=key===skipKey;
+    const isAdded=mstSet.has(key)&&doneSet.has(i)&&!isCur;
+    const isDone=doneSet.has(i)&&!isCur&&!isSkip&&!isAdded;
+
+    const div=document.createElement('div');
+    div.className='em-item'+(isCur?' emi-cur':isSkip?' emi-skip':isAdded?' emi-added':'');
+    const tag = isCur?'<span class="em-tag tg-c">NOW</span>':isSkip?'<span class="em-tag tg-s">SKIP</span>':isAdded?'<span class="em-tag tg-a">ADDED</span>':'<span class="em-tag tg-p">—</span>';
+    div.innerHTML=`<div class="em-nodes">${e.u}─${e.v}</div><div class="em-w">w=${e.w}</div>${tag}`;
+    el.appendChild(div);
+  });
+}
+
+// ─── render log ───────────────────────────────────────────────────────
+function renderLog(s) {
+  const el=document.getElementById('logEntries');
+  el.innerHTML='';
+  s.logs.forEach(l=>{
+    const d=document.createElement('div');
+    d.className='log-entry'+(l.t==='add'?' le-add':l.t==='find'?' le-find':l.t==='skip'?' le-skip':l.t==='done'?' le-done':'');
+    d.textContent=l.txt;
+    el.appendChild(d);
+  });
+}
+
+// ─── render all ───────────────────────────────────────────────────────
+function renderAll(){
+  const s=STEPS[cur];
+  document.getElementById('stepIcon').textContent=s.icon;
+  document.getElementById('stepTitle').textContent=s.title;
+  document.getElementById('stepText').innerHTML=s.text;
+  document.getElementById('sNum').textContent=cur;
+  document.getElementById('progBar').style.width=(cur/TOTAL*100)+'%';
+  document.getElementById('bPrev').disabled=cur===0;
+  document.getElementById('bNext').disabled=cur===TOTAL;
+  renderGraph(s);
+  renderDSU(s);
+  renderEdgesMini(s);
+  renderLog(s);
+}
+
+function go(d){cur=Math.max(0,Math.min(TOTAL,cur+d));renderAll();}
+function goTo(n){cur=n;renderAll();}
+
+// ─── DSU init visual ──────────────────────────────────────────────────
+function buildDSUInit(){
+  const el=document.getElementById('dsuInitVis');
+  for(let i=0;i<N;i++){
+    const d=document.createElement('div');
+    d.className='dsu-node';
+    d.innerHTML=`<div class="dn-id">${i}</div><div class="dn-par">parent=${i}</div><div class="dn-rnk">rank=0</div>`;
+    el.appendChild(d);
+  }
+}
+
+buildDSUInit();
+renderAll();
+</script>
+</body>
+</html>
