@@ -1,0 +1,542 @@
+🔷 Algorithm: Kruskal’s Algorithm
+Algorithm: KRUSKAL(G)
+
+Input: 
+    G = (V, E)  → Weighted Undirected Graph
+
+Output:
+    Minimum Spanning Tree (MST)
+
+Step 1: Start
+
+Step 2: Create an empty set MST
+
+Step 3: Sort all edges of graph in increasing order of weight
+
+Step 4: Make a separate set for each vertex 
+        (Using Disjoint Set / Union-Find)
+
+Step 5: For each edge (u, v) in sorted order:
+
+            a. Find the root of u and v
+            b. If root(u) ≠ root(v)
+                    Add edge (u, v) to MST
+                    Union(u, v)
+            c. Else
+                    Discard the edge (to avoid cycle)
+
+Step 6: Repeat until MST contains (V − 1) edges
+
+Step 7: Print MST
+
+Step 8: Stop
+-----
+Cycle Detection (Union-Find Algorithm)
+
+FIND(parent, i):
+    If parent[i] == i
+        Return i
+    Else
+        Return FIND(parent, parent[i])
+
+UNION(parent, x, y):
+    parent[FIND(x)] = FIND(y)
+-----
+
+📌 Important Points ⭐
+Greedy Algorithm
+Used for Weighted Undirected Graph
+Sort edges first
+Avoid cycles using Union-Find
+MST contains exactly (V − 1) edges
+Time Complexity = O(E log E)
+Space Complexity = O(V)
+
+-------
+
+Kruskal’s Algorithm sorts all edges in increasing order and selects the smallest edge that does not form a cycle until (V−1) edges are selected. Cycle detection is done using Disjoint Set (Union-Find). Time complexity is O(E log E).
+========================
+
+🔷 Algorithm: Prim’s Algorithm (Using Adjacency Matrix)
+
+Algorithm: PRIM(G)
+
+Input:
+    G = Weighted Undirected Graph
+    V = Number of vertices
+
+Output:
+    Minimum Spanning Tree (MST)
+
+Step 1: Start
+
+Step 2: Create arrays:
+        key[V] = ∞ (store minimum weight)
+        parent[V] (store MST)
+        visited[V] = False
+
+Step 3: Choose starting vertex (usually 0)
+        key[0] = 0
+        parent[0] = -1
+
+Step 4: Repeat V times:
+        a. Select vertex u with minimum key value 
+           which is not yet visited
+        b. Mark u as visited
+        c. For each adjacent vertex v of u:
+                If not visited[v] AND
+                   weight(u, v) < key[v]
+                Then
+                   key[v] = weight(u, v)
+                   parent[v] = u
+
+Step 5: Print edges using parent array
+
+Step 6: Stop
+
+-------
+
+📌 Important Points ⭐
+
+Greedy Algorithm
+Works on Weighted Undirected Graph
+Builds single tree
+Selects smallest edge from visited → unvisited
+MST contains (V − 1) edges
+No cycle formed
+Time Complexity:
+Using Matrix → O(V²)
+Using Min Heap → O(E log V)
+Space Complexity → O(V)
+
+---
+
+Prim’s Algorithm is a greedy method that starts from any vertex and repeatedly selects the minimum weight edge connecting a visited vertex to an unvisited vertex until (V−1) edges are selected. It produces a Minimum Spanning Tree. Time complexity is O(V²).
+
+==============
+
+🔷 Algorithm: DFS (Using Recursion)
+Algorithm: DFS(G, start)
+
+Input:
+    G → Graph (Adjacency Matrix/List)
+    start → Starting vertex
+
+Output:
+    Traversal order of vertices
+
+Step 1: Mark start as visited
+Step 2: Print start
+Step 3: For each adjacent vertex v of start:
+            If v is not visited:
+                Call DFS(G, v)
+Step 4: Stop
+->>>
+🔷 Full Algorithm for All Vertices
+
+(Important if graph is disconnected)
+
+Algorithm: DFS_ALL(G)
+
+Step 1: Initialize visited array as False
+Step 2: For each vertex v in graph:
+            If not visited[v]:
+                Call DFS(G, v)
+Step 3: Stop
+----------
+
+🔷 DFS Using Stack (Non-Recursive)
+
+Algorithm: DFS_STACK(G, start)
+
+Step 1: Create empty stack
+Step 2: Push start vertex
+Step 3: While stack not empty:
+            Pop vertex v
+            If v not visited:
+                Mark visited
+                Print v
+                Push all adjacent unvisited vertices
+Step 4: Stop
+
+🔷 Time and Space Complexity
+
+Time Complexity → O(V + E)
+
+Space Complexity → O(V)
+
+--------OR----MY CODE-----
+
+Algorithm: DFS(G, src)
+
+Step 1: Start
+
+Step 2: Create a visited array of size V
+        Initialize all elements to False
+
+Step 3: Create an empty stack
+
+Step 4: Push the starting vertex (src) into stack
+
+Step 5: While stack is not empty:
+
+            a. Pop the top vertex from stack
+               Let it be v
+
+            b. If visited[v] is False:
+                    Print v
+                    Mark visited[v] = True
+
+            c. For each vertex i from 0 to V-1:
+                    If G[v][i] == 1 AND visited[i] == False:
+                        Push i into stack
+
+Step 6: Stop
+-----------
+🔷 Time & Space Complexity
+
+Time Complexity → O(V²)
+(Because adjacency matrix used)
+
+Space Complexity → O(V)
+(Visited array + stack)
+
+DFS is a graph traversal algorithm that explores vertices deeply before backtracking. It uses a stack and visited array. Time complexity using adjacency matrix is O(V²).
+
+==================
+
+🔷 Algorithm: BFS (Using Adjacency Matrix)
+🔹 Input:
+
+Graph G (Adjacency Matrix)
+
+Starting vertex src
+
+🔹 Output:
+
+BFS Traversal order
+
+✅ Full Algorithm
+Algorithm: BFS(G, src)
+
+Step 1: Start
+
+Step 2: Create a visited array of size V
+        Initialize all elements to False
+
+Step 3: Create an empty queue
+
+Step 4: Mark visited[src] = True
+        Enqueue src into queue
+
+Step 5: While queue is not empty:
+
+            a. Dequeue a vertex from queue
+               Let it be v
+
+            b. Print v
+
+            c. For each vertex i from 0 to V-1:
+                    If G[v][i] == 1 AND visited[i] == False:
+                        Mark visited[i] = True
+                        Enqueue i into queue
+
+Step 6: Stop
+-----
+
+✅ Easy Algorithm (5–6 Steps Only)
+Algorithm: BFS(G, start)
+
+1. Create a visited array and mark all vertices as NOT visited.
+
+2. Create an empty Queue.
+
+3. Mark start vertex as visited and enqueue it.
+
+4. While Queue is not empty:
+      a. Dequeue a vertex v.
+      b. Print v.
+      c. For every adjacent vertex u of v:
+             If u is not visited:
+                 Mark u as visited.
+                 Enqueue u.
+
+5. Stop.
+
+-----OR --------MY CODE------------
+
+Algorithm: Breadth First Search (Using Adjacency Matrix & Queue)
+🔷 Input:
+
+Graph G represented using adjacency matrix
+
+Starting vertex src
+
+🔷 Output:
+
+BFS Traversal order
+
+✅ Full Algorithm
+Algorithm: BFS(G, src)
+
+Step 1: Start
+
+Step 2: Create a visited array of size V
+        Initialize all elements to False
+
+Step 3: Create an empty queue
+
+Step 4: Mark visited[src] = True
+        Enqueue src into queue
+
+Step 5: While queue is not empty do:
+
+            a. Dequeue a vertex from queue
+               Let it be v
+
+            b. Print v
+
+            c. For i = 0 to V-1 do:
+                   If G[v][i] == 1 AND visited[i] == False then
+                        Mark visited[i] = True
+                        Enqueue i into queue
+
+Step 6: Stop
+------------
+🔷 Time & Space Complexity
+
+Using Adjacency Matrix:
+
+Time Complexity → O(V²)
+
+Space Complexity → O(V)
+
+⭐ Important Points
+
+✔ Uses Queue (FIFO)
+✔ Traverses Level by Level
+✔ Uses Visited Array
+✔ Works for Directed & Undirected Graph
+✔ Finds Shortest Path in Unweighted Graph
+
+BFS is a graph traversal algorithm that visits vertices level by level using a queue. It marks vertices as visited to avoid repetition. Time complexity using adjacency matrix is O(V²).
+
+=======================
+
+🌳 Algorithm: Path Matrix using Warshall’s Algorithm
+🔷 Input:
+
+Adjacency Matrix A[n][n]
+
+🔷 Output:
+
+Path Matrix P[n][n] (Transitive Closure)
+
+✅ Full Algorithm
+Algorithm: WARSHALL(A, n)
+
+Step 1: Start
+
+Step 2: Initialize P = A
+        (Copy adjacency matrix into P)
+
+Step 3: For k = 0 to n-1 do
+            For i = 0 to n-1 do
+                For j = 0 to n-1 do
+
+                    If P[i][j] == 1
+                        Continue
+
+                    Else if P[i][k] == 1 AND P[k][j] == 1
+                        Set P[i][j] = 1
+
+Step 4: Return P
+
+Step 5: Stop
+
+
+🔷 Short Version (Write in Exam Quickly)
+For k = 0 to n-1
+   For i = 0 to n-1
+      For j = 0 to n-1
+         P[i][j] = P[i][j] OR (P[i][k] AND P[k][j])
+
+🔷 Time Complexity
+✔ O(n³)
+
+🔷 Important Points ⭐
+
+Used to find Transitive Closure
+Works on Directed Graph
+Based on Dynamic Programming
+Uses logical AND & OR operation
+
+
+Warshall’s Algorithm computes the Path Matrix by checking indirect connections between all pairs of vertices using intermediate vertices. It runs in O(n³) time.
+
+====================
+
+✅ Algorithm: Create Graph Using Adjacency List
+Algorithm: CREATE_GRAPH(V, E)
+
+Step 1: Start
+
+Step 2: Create an array/list Adj of size V
+        (Each element is an empty list)
+
+Step 3: For each edge (u, v) in E do:
+
+            a. Add v to Adj[u]
+
+            b. If graph is Undirected:
+                    Add u to Adj[v]
+
+Step 4: Stop
+
+
+🔷 Time & Space Complexity
+
+Space Complexity → O(V + E)
+Adding Edge → O(1)
+Best for Sparse Graphs
+
+⭐ Important Points
+
+✔ Uses list/array of lists
+✔ Saves memory compared to matrix
+✔ Good for large sparse graphs
+✔ Faster traversal (O(V + E))
+
+
+Adjacency List represents a graph using an array of lists where each list stores adjacent vertices. It requires O(V + E) space and is efficient for sparse graphs.
+
+=======================
+
+🌳 Algorithm: Adjacency List Representation (Using Dictionary)
+🔷 Input:
+
+Edges of the graph
+
+🔷 Output:
+
+Graph stored in adjacency list format
+
+✅ Algorithm: CREATE_GRAPH()
+Step 1: Start
+
+Step 2: Create an empty dictionary AdjList
+
+Step 3: For each edge (src, dest) do:
+
+            a. If src is not in AdjList:
+                    Add src with empty list
+
+            b. If dest is not in AdjList:
+                    Add dest with empty list
+
+            c. Add dest to AdjList[src]
+
+            d. Add src to AdjList[dest]   (For Undirected Graph)
+
+Step 4: To print graph:
+            For each vertex in AdjList:
+                Print vertex and its adjacency list
+
+Step 5: Stop
+
+
+🔷 Time Complexity
+
+Adding Vertex → O(1)
+Adding Edge → O(1)
+Space Complexity → O(V + E)
+
+⭐ Important Points
+
+✔ Uses Dictionary (Hash Map)
+✔ Efficient for Sparse Graph
+✔ Easy to insert edges
+✔ Requires O(V + E) space
+
+
+Adjacency List stores graph using a dictionary where each vertex contains a list of its adjacent vertices. For undirected graphs, both vertices are added to each other's list.
+
+==========================OR================
+🔷 Simple Explanation
+
+V → Number of nodes
+E → Number of connections
+(u, v) → An edge connecting vertex u to vertex v
+
+🌳 Algorithm: Create Graph Using Adjacency List
+🔷 Algorithm: CREATE_GRAPH(V, E)
+Step 1: Start
+
+Step 2: Create an array/list Adj of size V
+        Initialize each element of Adj with an empty list.
+
+Step 3: For each edge (u, v) in the set of edges E do:
+
+            a. Add vertex v to Adj[u]
+
+            b. If the graph is Undirected,
+                   Add vertex u to Adj[v]
+
+Step 4: Stop
+
+
+🔷 Explanation
+V → Number of Vertices
+E → Number of Edges
+(u, v) → Edge connecting vertex u and vertex v
+Each vertex stores its adjacent vertices in a list.
+
+🔷 Time Complexity
+Space Complexity → O(V + E)
+Edge Insertion → O(1)
+
+
+Adjacency List represents a graph using an array of lists where each vertex maintains a list of its adjacent vertices. It is memory efficient and suitable for sparse graphs.
+
+========================
+🌳 Adjacency Matrix Representation of Graph
+🔷 Definition
+
+Adjacency Matrix is a method of representing a graph using a 2D array (matrix) of size V × V, where:
+
+If there is an edge between vertex i and j,
+→ Matrix[i][j] = 1
+
+Otherwise,
+→ Matrix[i][j] = 0
+
+🔷 Algorithm: CREATE_ADJ_MATRIX(V, E)
+Step 1: Start
+
+Step 2: Create a 2D array Matrix of size V × V
+
+Step 3: Initialize all elements of Matrix to 0
+
+Step 4: For each edge (u, v) in E do:
+
+            a. Set Matrix[u][v] = 1
+
+            b. If the graph is Undirected then
+                   Set Matrix[v][u] = 1
+
+Step 5: Stop
+
+
+🔷 Explanation of Terms
+
+V → Number of Vertices
+E → Number of Edges
+(u, v) → Edge connecting vertex u and v
+Matrix[u][v] = 1 → Edge exists
+
+
+🔷 Time & Space Complexity
+
+Space Complexity → O(V²)
+Edge Insertion → O(1)
+Edge Checking → O(1)
