@@ -33,7 +33,7 @@ def postorder(root):
 
 
 def level_order(root):
-    if not root:
+    if root is None:
         return
     queue = deque([root])
     print("Level Order:", end=" ")
