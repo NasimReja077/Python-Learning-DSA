@@ -84,18 +84,20 @@ class Deque:
             i = (i + 1) % self.size
         print()
 # ---------- Example Usage ----------
-if __name__ == "__main__":
-    deque = Deque(5)
 
-    deque.insert_rear(10)
-    deque.insert_rear(20)
-    deque.insert_front(5)
-    deque.display()
+deque = Deque(5)
 
-    deque.delete_front()
-    deque.display()
+deque.insert_rear(10)
+deque.insert_rear(20)
 
-    deque.delete_rear()
-    deque.display()
+deque.insert_front(5)
+
+deque.display()
+
+deque.delete_front()
+deque.display()
+
+deque.delete_rear()
+deque.display()
     
     
