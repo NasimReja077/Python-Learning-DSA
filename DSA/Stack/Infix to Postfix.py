@@ -16,17 +16,17 @@ def infix_to_postfix(expression):
 
     for token in expression:
         if is_operand(token):
-            output.append(token)          # Case A: operand → output
+            output.append(token) # Case A: operand → output
 
         elif token == '(':
-            stack.append(token)           # Case B: ( → push
+            stack.append(token) # Case B: ( → push
 
-        elif token == ')':                # Case C: ) → pop till (
+        elif token == ')': # Case C: ) → pop till (
             while stack and stack[-1] != '(':
                 output.append(stack.pop())
-            stack.pop()                   # discard '('
+            stack.pop()  # discard '('
 
-        else:                             # Case D: operator
+        else: # Case D: operator
             # For ^ (right-associative), use strict >
             # For others (left-associative), use >=
             while (stack and stack[-1] != '(' and
