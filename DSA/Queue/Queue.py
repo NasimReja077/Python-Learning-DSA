@@ -3,8 +3,8 @@ class Queue:
         self.size = size
         self.queue = [None] * size
         self.front = -1
-        self.rear = -1
-
+        self.rear = -1 
+        
     # Insertion operation
     def enqueue(self, value):
         if self.rear == self.size - 1:
