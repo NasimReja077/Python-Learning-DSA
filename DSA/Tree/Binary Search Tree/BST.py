@@ -63,6 +63,10 @@ def InOrder(root):
         InOrder(root.left)
         print(root.data, end=" ")
         InOrder(root.right)
+        
+# -------- FIND MIN --------
+# -------- FIND MAX --------
+# -------- FIND HEIGHT --------
 
 # --- Driver Code ---
 
