@@ -21,15 +21,28 @@ class CircularLinkedList:
             print(value, "inserted as first node")
             return
 
+        # Find last node
         temp = self.head
-        while temp.next != self.head:
+        while temp.next != self.head: # Move forward until next pointer points back to head.
             temp = temp.next
 
-        new_node.next = self.head
-        temp.next = new_node #  Update Last Node to Point to New Node
-        self.head = new_node # Update HEAD to New Node
+        new_node.next = self.head # 5 → 10 || Connect new node to head node
+        temp.next = new_node # Update Last Node to Point to New Node || 40 → 5
+        self.head = new_node # Update HEAD to New Node || Now new head = 5
 
         print(value, "inserted at beginning")
+        
+        # temp = temp.next
+        # temp = 10 
+        # 10.next = 20
+        # Is 20 == head(10) ?
+        # No → move
+        
+        # temp = 40
+        # Check:
+        # 40.next = 10
+        # Is 10 == head(10) ?
+        # Yes ✅ stop.
 
 
     # ii) Insert at End
@@ -39,7 +52,7 @@ class CircularLinkedList:
         if self.head is None:
             self.head = new_node
             new_node.next = self.head
-            print(value, "inserted as first node")
+            print(value, "inserted as end node")
             return
 
         temp = self.head
@@ -73,6 +86,25 @@ class CircularLinkedList:
 
         print(prev_value, "not found")
 
+# First connection
+
+# new_node.next = temp.next       
+# Currently:
+# temp = 20
+# and:
+# 20.next = 30
+# So:
+# 25.next = 30
+# Diagram:
+# 25 → 30
+
+# Second connection
+
+# temp.next = new_node
+# So:
+# 20.next = 25
+# Now:
+# 20 → 25 → 30
 
     # iv) Display
     def display(self):
@@ -133,7 +165,7 @@ class CircularLinkedList:
             print("List is empty")
             return
 
-        if self.head.next == self.head:
+        if self.head.next == self.head: #  Check single node case
             print(self.head.data, "deleted (only node)")
             self.head = None
             return
@@ -143,9 +175,20 @@ class CircularLinkedList:
             temp = temp.next
 
         print(self.head.data, "deleted from beginning")
-        temp.next = self.head.next
+        temp.next = self.head.next # 40.next = 20 
         self.head = self.head.next
 
+# Line 1:
+# temp.next = self.head.next
+# Meaning:
+# 40.next = 20
+# So link becomes:
+# 40 → 20
+
+# Line 2:
+# self.head = self.head.next
+# Meaning:
+# head = 20
 
     # viii) Delete from End
     def delete_end(self):
@@ -239,10 +282,12 @@ def delete_value(self, key):
 
         # Only one node case
         if temp.next == self.head:
-            self.head = None
             print(key, "deleted (only node)")
+            self.head = None
+            # print(key, "deleted (only node)")
             return
 
+        # Multiple nodes - delete head
         # More than one node
         last = self.head
         while last.next != self.head:
