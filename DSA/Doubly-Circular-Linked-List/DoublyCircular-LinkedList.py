@@ -18,9 +18,9 @@ class DoublyCircularLinkedList:
         new_node = Node(value)
 
         if self.head is None:
+            self.head = new_node
             new_node.next = new_node
             new_node.prev = new_node
-            self.head = new_node
             print(value, "inserted as first node")
             return
 
@@ -29,8 +29,8 @@ class DoublyCircularLinkedList:
         new_node.next = self.head
         new_node.prev = last
 
-        last.next = new_node
         self.head.prev = new_node
+        last.next = new_node
 
         self.head = new_node
         print(value, "inserted at beginning")
@@ -41,9 +41,9 @@ class DoublyCircularLinkedList:
         new_node = Node(value)
 
         if self.head is None:
+            self.head = new_node
             new_node.next = new_node
             new_node.prev = new_node
-            self.head = new_node
             print(value, "inserted as first node")
             return
 
@@ -202,13 +202,14 @@ class DoublyCircularLinkedList:
         while True:
             if temp.data == key:
 
-                if temp.next == self.head and temp.prev == self.head:
-                    # only one node
+                # only one node
+                if self.head.next == self.head:
                     self.head = None
                 else:
                     temp.prev.next = temp.next
                     temp.next.prev = temp.prev
-
+                    
+                    # if deleting head
                     if temp == self.head:
                         self.head = temp.next
 
