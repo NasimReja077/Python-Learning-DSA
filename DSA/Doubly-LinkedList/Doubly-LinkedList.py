@@ -23,6 +23,18 @@ class DoublyLinkedList:
 
         self.head = new_node
         print(value, "inserted at beginning")
+    
+    # def insert_beginning(self, value):
+    #     new_node = Node(value)
+
+    #     if self.head is None:
+    #         self.head = new_node
+    #         print(value, "inserted at Beg")
+    #         return
+    #     new_node.next = self.head
+    #     self.head.prev = new_node
+    #     self.head = new_node
+    #     print(value, "inserted at beginning")
 
     # Insert at end
     def insert_end(self, value):
@@ -34,12 +46,28 @@ class DoublyLinkedList:
             return
 
         temp = self.head
-        while temp.next:
+        while temp.next: # while temp.next != None:
             temp = temp.next
 
         temp.next = new_node
         new_node.prev = temp
         print(value, "inserted at end")
+    
+    # def insert_end(self, value):
+    #     new_node = Node(value)
+
+    #     if self.head is None:
+    #         self.head = new_node
+    #         print(value, "inserted at end")
+    #         return
+
+    #     temp = self.head
+    #     while temp.next != None:
+    #         temp = temp.next
+
+    #     temp.next = new_node
+    #     new_node.prev = temp
+    #     print(value, "inserted at end")
 
     # Insert after a given value (middle insertion)
     def insert_after(self, prev_value, value):
@@ -61,6 +89,22 @@ class DoublyLinkedList:
             temp = temp.next
 
         print("Value", prev_value, "not found")
+    
+    # def insert_after(self, value, prev_value,):
+    #     temp = self.head
+
+    #     while temp.next != None:
+    #         if temp.data == prev_value:
+    #             break
+    #         else:
+    #             temp = temp.next
+            
+    #         new_node = Node(value)
+    #         new_node.next = temp.next
+    #         temp.next.prev = new_node
+    #         temp.next = new_node
+    #         new_node.prev = temp
+            
 
     # ---------- DISPLAY / TRAVERSING ----------
     def display(self):
