@@ -12,11 +12,12 @@ def insertion_sort(arr):
         # Move elements of arr[0..i-1] 
         # that are greater than key 
         # to one position ahead
+        # j >= 0 because we need to check all elements before key.
         while j >= 0 and arr[j] > key:
-            arr[j + 1] = arr[j]
-            j = j-1
+            arr[j + 1] = arr[j]  # Shift element one position to the right
+            j = j-1 # Move to the previous elemennt
 
-        arr[j + 1] = key   # Insert key at correct position
+        arr[j + 1] = key   # Insert key at correct position # 
 
     return arr
 
