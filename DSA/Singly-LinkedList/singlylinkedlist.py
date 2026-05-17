@@ -52,7 +52,7 @@ class SinglyLinkedList:
         print("Value", prev_value, "not found")
 
 
-    # iv) Display / Traversing the list
+    # iv) Display / Traversing the list+
     def display(self):
         if self.head is None:
             print("Linked List is empty")
