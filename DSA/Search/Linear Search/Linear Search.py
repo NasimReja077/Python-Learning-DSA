@@ -10,9 +10,9 @@ def linear_search(arr, target):
 numbers = [10, 25, 30, 45, 50]
 key = 30
 
-result = linear_search(numbers, key)
+result = linear_search(numbers, key) # linear_search function ko call kar ke result variable me store kar liya.
 
-if result != -1:
+if result != -1: # != -1 means element found
     print("Element found at index:", result)
 else:
     print("Element not found")
