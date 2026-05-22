@@ -1,15 +1,18 @@
 class Graph:
     def __init__(self):
-        self.adjList = {}
+        self.adjList = {} # Dictionary to store the adjacency list representation of the graph
 
     def add_vertex(self, vertex):
         if vertex not in self.adjList:
-            self.adjList[vertex] = []
+            self.adjList[vertex] = [] # Initialize the adjacency list for the vertex if it doesn't exist
+            # [vertex] is key and [] is value (list of adjacent vertices)
 
     def addEdge(self, src, dest):
+        # create empty list for src and dest if they don't exist
         self.add_vertex(src)
         self.add_vertex(dest)
         
+        # add the edge to the adjacency list (undirected graph)
         self.adjList[src].append(dest)
         self.adjList[dest].append(src)
 
