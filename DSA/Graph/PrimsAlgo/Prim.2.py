@@ -2,25 +2,35 @@
 
 import heapq
 
-def prim(n, adj):
+def prim(n, adj): # n = number of vertices, adj = adjacency list
     visited = [False] * n
-    min_heap = [(0, 0)]  # (weight, vertex)
+     # (weight, vertex, parent)
+    min_heap = [(0, 0, -1)]
     total_weight = 0
     mst = []
 
     while min_heap:
-        weight, u = heapq.heappop(min_heap)
+        weight, u, parent = heapq.heappop(min_heap) # u = current vertex, parent = vertex from which u is reached
 
         if visited[u]:
             continue
 
         visited[u] = True
         total_weight += weight
+        
+        # Add edge only after vertex is selected
+        if parent != -1: # Skip the first vertex which has no parent
+            mst.append((parent, u, weight)) # 
 
-        for v, w in adj[u]:
+        for v, w in adj[u]: # v = neighbor vertex, w = weight of edge u-v adj[u] contains (neighbor, weight) pairs
+            
             if not visited[v]:
-                heapq.heappush(min_heap, (w, v))
-                mst.append((u, v, w))
+                heapq.heappush(min_heap, (w, v, u))
+                # mst.append((u, v, w))
+                
+    print("MST Edges:")
+    for u, v, w in mst:
+        print(f"{u} - {v} = {w}")
 
     return total_weight
 
