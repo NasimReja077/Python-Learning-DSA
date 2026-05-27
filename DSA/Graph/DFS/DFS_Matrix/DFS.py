@@ -15,11 +15,11 @@ class Graph:
     def print(self):
         # Prints the adjacency matrix
         for row in self.mat:
-            print(' '.join(map(str, row)))
+            print(' '.join(map(str, row))) # str, row is a list of integers, so we need to convert them to strings before joining
 
     def dfs(self, src):
         # Iterative Depth-First Search using a stack
-        visited = [False] * self.size
+        visited = [False] * self.size # Keeps track of visited nodes
         stack = [src]
 
         while(stack):
@@ -31,8 +31,8 @@ class Graph:
 
                 # Check for adjacent unvisited nodes
                 for i in range(self.size):
-                    if self.mat[v][i] == 1 and visited[i] == False:
-                        stack.append(i)
+                    if self.mat[v][i] == 1 and visited[i] == False: # self.mat[v][i] == 1 checks if there is an edge between v and i and 1 means there is an edge, 0 means there is no edge
+                        stack.append(i) # If there is an edge and the node is not visited, we add it to the stack for further exploration
 
 # --- Execution ---
 g = Graph(6)
