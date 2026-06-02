@@ -1,14 +1,14 @@
 # https://csiflabs.cs.ucdavis.edu/~tyfeng/ecs34/C++/graphs5.html
 
 class DisjointSet:
-    def __init__(self, n):
-        self.parent = [i for i in range(n)]
-        self.rank = [0] * n
+    def __init__(self, n): # n is the number of elements
+        self.parent = [i for i in range(n)] # Initially, each element is its own parent
+        self.rank = [0] * n # Rank is used to keep the tree flat
 
-    def find(self, i):
-        if self.parent[i] == i:
+    def find(self, i): # Path compression heuristic
+        if self.parent[i] == i:# If i is the root of the set, return it
             return i
-        self.parent[i] = self.find(self.parent[i])
+        self.parent[i] = self.find(self.parent[i]) # Path compression: make the parent of i point directly to the root
         return self.parent[i]
 
     def union(self, i, j):
