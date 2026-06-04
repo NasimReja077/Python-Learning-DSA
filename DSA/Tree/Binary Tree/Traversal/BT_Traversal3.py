@@ -34,6 +34,7 @@ def postorder(root):
 
 def level_order(root):
     if root is None:
+        print("Tree is empty")
         return
     queue = deque([root])
     print("Level Order:", end=" ")
