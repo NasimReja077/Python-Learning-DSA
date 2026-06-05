@@ -523,7 +523,6 @@ Step 4: For each edge (u, v) in E do:
 
             b. If the graph is Undirected then
                    Set Matrix[v][u] = 1
-
 Step 5: Stop
 
 
