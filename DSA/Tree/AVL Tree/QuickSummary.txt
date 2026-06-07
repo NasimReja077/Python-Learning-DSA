@@ -1,0 +1,22 @@
+Rotation Cases — Quick Reference
+
+Case    BF at Node    Imbalance Location         Fix
+──────  ────────────  ──────────────────────────────────────────────────
+LL      BF = +2       Left child's LEFT subtree    Single Right Rotation
+
+RR      BF = -2       Right child's RIGHT subtree  Single Left Rotation
+
+LR      BF = +2       Left child's RIGHT subtree   Left rotate left child
+                                                   then Right rotate node
+
+RL      BF = -2       Right child's LEFT subtree   Right rotate right child
+                                                   then Left rotate node
+Complexity Summary
+Operation       BST (avg)    BST (worst)   AVL (always)
+────────────    ─────────    ───────────   ────────────
+Insert          O(log n)     O(n)          O(log n) ✓
+Delete          O(log n)     O(n)          O(log n) ✓
+Search          O(log n)     O(n)          O(log n) ✓
+Space           O(h)         O(n)          O(log n) ✓
+
+AVL Tree guarantees O(log n) for all operations in every case because the tree always stays balanced within height difference of 1.
