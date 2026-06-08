@@ -1,5 +1,5 @@
 from collections import deque
-from logging import root
+# from logging import root
 
 
 class Node:
@@ -19,9 +19,14 @@ def insert(root, value):
     # Duplicate values not allowed
     if root.data == value:
         return root
-    
+        
+# > means greater than
+# < means less than
+# 15 > 10 -> True
+# 10 < 15 -> True
+
     # Insert in left subtree
-    if value < root.data:
+    if value < root.data: # hear value is smaller and root data is big
         root.left = insert(root.left, value)
     # Insert in right subtree
     elif value > root.data:
@@ -68,6 +73,7 @@ def get_successor(root):
     return root
 
 
+
 # -------- DELETE --------
 def delete(root, value):
     if root is None: #  If Node not found, return None
@@ -81,8 +87,12 @@ def delete(root, value):
         root.right = delete(root.right, value)
 
     else:
+        # Case 1: Node has No Child (Leaf Node)
+        if root.left is None and root.right is None:
+            return None
+        
         # 2. Node found, handle deletion
-        # Case A & B: Node has one child or no children
+        # Case 2A & 2B: Node has one child or no children
         if root.left is None:
             return root.right
         
@@ -90,7 +100,7 @@ def delete(root, value):
             return root.left
 
         # Case 3: Node has two children
-        
+        # Find the successor (smallest value in the right subtree)
         succ = get_successor(root)
         root.data = succ.data # Replace nodes value with successor's value
         root.right = delete(root.right, succ.data) # Delete the successor node from right subtree
