@@ -1,0 +1,70 @@
+ALGORITHM: DELETE_NODE(root, value)
+
+Input: Root of BST, value to delete
+Output: Updated BST
+
+Step 1: Start
+
+Step 2: If tree is empty
+     If root == NULL
+     return NULL
+
+Step 3: Search for the node to delete:
+
+     If value < root.data
+     Go to left subtree
+
+          → root.left = DELETE(root.left, value)
+
+     Else If value > root.data
+     Go to right subtree
+
+          → root.right = DELETE(root.right, value)
+
+Step 4: Node is found (value == root.data)   
+     
+     Case 1: Node has no child (Leaf node)
+          Simply delete it.
+          Return NULL
+
+     Case 2: Node has one child
+     Replace node with its child.
+     
+     If left child does not exist: 
+          -> Return root.right
+
+     If right child does not exist:
+          -> Return root.left  
+
+     Case 3: Node has two children
+     Find the inorder successor (smallest node in right subtree)  
+     succ ← GET_SUCCESSOR(root)
+
+     Copy successor’s data into current node: 
+          root.data ← succ.data  
+
+     Delete the successor from right subtree: 
+          root.right ← DELETE(root.right, succ.data)
+
+Step 6: Return root
+Step 7: Stop
+
+
+ GET_SUCCESSOR Algorithm (Helper Function)
+
+ Algorithm: GET_SUCCESSOR(node)
+ 
+ Input: A node whose inorder successor is to be found
+ Output: Inorder successor node
+
+ Step 1: Move to right subtree
+
+   node ← node.right
+   
+   Step 2: While node is not NULL and node.left is not NULL 
+   // Keep moving left until left child becomes NULL:
+   
+     → Move to the leftmost node
+          node ← node.left
+   
+   Step 3: Return node
