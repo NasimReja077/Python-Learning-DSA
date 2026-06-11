@@ -1,0 +1,158 @@
+A Binary Heap is a complete binary tree that satisfies the heap
+     property:Max Heap: Parent node is greater than or equal to its children.
+     Min Heap: Parent node is less than or equal to its children.
+
+It is usually implemented using an array for efficiency.
+
+2. Array RepresentationRoot is at index 0
+     Left child of i → 2*i + 1
+     Right child of i → 2*i + 2
+     Parent of i → (i-1)//2
+
+3. Heap Algorithms (Max Heap)
+Helper Function: Heapify (Most Important)
+
+Algorithm: MaxHeapify(arr, n, i)
+
+Step 1: Start
+
+Step 2: Set largest = i
+
+Step 3: Compute left child
+        left = 2*i + 1
+
+Step 4: Compute right child
+        right = 2*i + 2
+
+Step 5: If left < n and arr[left] > arr[largest]
+        then largest = left
+
+Step 6: If right < n and arr[right] > arr[largest]
+        then largest = right
+
+Step 7: If largest != i
+        Swap arr[i] and arr[largest]
+        Call MaxHeapify(arr, n, largest)
+
+Step 8: Stop
+# time Complexity = 
+============================
+
+
+
+Algorithm: MinHeapify(arr, n, i)
+
+Step 1: Start
+
+Step 2: Set smallest = i
+
+Step 3: Compute left child
+        left = 2*i + 1
+
+Step 4: Compute right child
+        right = 2*i + 2
+
+Step 5: If left < n and arr[left] < arr[smallest]
+        then smallest = left
+
+Step 6: If right < n and arr[right] < arr[smallest]
+        then smallest = right
+
+Step 7: If smallest ≠ i
+        Swap arr[i] and arr[smallest]
+        Call MinHeapify(arr, n, smallest)
+
+Step 8: Stop
+
+
+===========================
+
+Insert Algorithm 
+==========================
+
+Algorithm: Heap_Insert(heap, value)
+Step 1: Start
+Step 2: Append value at the end of heap
+Step 3: Set i = last index
+
+Step 4: While i > 0 and heap[parent(i)] < heap[i]
+         a) Swap heap[i] and heap[parent(i)]
+         b) Set i = parent(i)
+
+Step 5: Stop
+
+Time Complexity: O(log n)
+=============
+
+
+
+Algorithm: InsertMinHeap(heap, value)
+
+Step 1: Start
+
+Step 2: Insert value at the end of heap
+
+Step 3: Set i = last index
+
+Step 4: While i > 0 and heap[parent(i)] > heap[i]
+
+        a) Swap heap[i] and heap[parent(i)]
+
+        b) Set i = parent(i)
+
+Step 5: Stop
+
+
+==================
+Extract Max (Delete Root) Algorithm
+=========================
+Algorithm: Extract_Max(heap)
+Step 1: Start
+Step 2: If heap is empty
+        Return NULL
+
+Step 3: Store root value in max_val // max_val ← arr[0]
+Step 4: Replace root with last element // arr[0] ← arr[n-1]
+Step 5: Delete last element // n ← n - 1
+Step 6: Call MaxHeapify(heap, size, 0)
+Step 7: Return max_val
+Step 8: Stop
+
+Time Complexity: O(log n)
+=================
+
+
+Extract Minimum
+Algorithm: ExtractMin(heap)
+
+Step 1: Start
+
+Step 2: If heap is empty
+        Return NULL
+
+Step 3: Store root value in min_val
+
+Step 4: Replace root with last element
+
+Step 5: Delete last element
+
+Step 6: Call MinHeapify(heap, size, 0)
+
+Step 7: Return min
+
+Step 8: Stop
+
+
+=====================
+Build Heap Algorithm 
+
+Algorithm: Build_Max_Heap(arr)
+Step 1: Start
+Step 2: Copy array into heap
+Step 3: Set n = size of heap
+Step 2: For i = (n//2 - 1) down to 0
+         Call MaxHeapify(arr, n, i)
+Step 3: Stop
+
+Time Complexity: O(n)
+==============
