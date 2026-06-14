@@ -23,51 +23,51 @@ class DoublyLinkedList:
 
     # Insert at any position
     def insert_at_position(self, value, position):
+        if position < 1:
+            print("Invalid Position!")
+            return
+
         new_node = Node(value)
 
-        # Case 1: Empty list or insert at first position
-        if position == 1:
+        # Case 1: Empty List or Insert at First Position (position == 1)
+        if position == 1 or self.head is None:
             new_node.next = self.head
-
+            # If the list is not empty, set the previous head's prev pointer to the new node
             if self.head:
                 self.head.prev = new_node
-
             self.head = new_node
             print(value, "inserted at position", position)
             return
-
+         # Traverse to the node before the desired position
         temp = self.head
 
         # Move to node before required position
-        for i in range(position - 2):
+        for _ in range(position - 2): # why not position - 1? because we want to move to the node before the given position, not the node at the given position
             if temp is None:
                 print("Position out of bounds")
                 return
-            temp = temp.next
-
-        if temp is None:
-            print("Position out of bounds")
-            return
-
-        # Insert node
-        new_node.next = temp.next
-        new_node.prev = temp
-
-        if temp.next:
-            temp.next.prev = new_node
-
-        temp.next = new_node
-
-        print(value, "inserted at position", position)
+            # Insert new_node between temp and temp.next
+            new_node.next = temp.next
+            new_node.prev = temp
+            # Update the next node's prev pointer if it exists
+            if temp.next:
+                temp.next.prev = new_node
+        
+            # Update the current node's next pointer
+            temp.next = new_node
+            print(value, "inserted at position", position)
 
     # Display Doubly Linked List
     def display(self):
+        if self.head is None:
+            print("Doubly Linked List is Empty")
+            return
+        
         temp = self.head
-
+        print("Doubly Linked List: ", end="")
         while temp:
             print(temp.data, end=" <-> ")
             temp = temp.next
-
         print("NULL")
 
 
