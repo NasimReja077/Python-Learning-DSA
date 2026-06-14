@@ -35,7 +35,7 @@ def bubbleSort(arr):
     for i in range(n): # This controls the number of passes.
         
         # Inner loop for comparison
-        for j in range(0, n-1-i): # This avoids checking already sorted elements at the end. // j = Current element.
+        for j in range(0, n-1-i): # 0 is stating index, n-1-i is the last index to check , n is total number of elements, -1 is the step, -i is to avoid checking already sorted elements at the end. // j = Current element.
             
             # Swap if current element is greater than next element
             if(arr[j] > arr[j+1]):
