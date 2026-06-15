@@ -19,10 +19,14 @@ class CircularLinkedList:
 
     # Insert node at any position
     def insert_at_position(self, value, position):
-        new_node = Node(value)
+        if position < 1:
+            print("Invalid Position!")
+            return
 
-        # Case 1: Empty list OR Insert at first position
-        if position == 1:
+        new_node = Node(value)
+        
+         # Case 1: Empty List or Insert at Position 1 (First Position)
+        if self.head is None or position == 1:
 
             # Empty list
             if self.head is None:
@@ -43,38 +47,34 @@ class CircularLinkedList:
             print(value, "inserted at position", position)
             return
 
-        # Traverse to node before desired position
+        # Case 2: Insert at Middle or Last Position
         temp = self.head
-
-        for i in range(position - 2):
+        
+        for _ in range(position - 2):
             temp = temp.next
+            if temp.next == self.head:          # Reached end of list
+                break
 
-            if temp == self.head:
-                print("Invalid Position")
-                return
-
-        # Insert new node
+        # Insert the new node
         new_node.next = temp.next
         temp.next = new_node
 
         print(value, "inserted at position", position)
 
-    # Display Circular Linked List
+    # Display Function
     def display(self):
         if self.head is None:
-            print("List is Empty")
+            print("Circular Linked List is Empty")
             return
 
         temp = self.head
-
+        print("Circular Linked List: ", end="")
         while True:
             print(temp.data, end=" -> ")
             temp = temp.next
-
             if temp == self.head:
                 break
-
-        print("(back to head)")
+        print("(back to", self.head.data, ")")
 
 
 # ---------------- MAIN PROGRAM ----------------
