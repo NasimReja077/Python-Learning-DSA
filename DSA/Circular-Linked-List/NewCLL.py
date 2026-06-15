@@ -20,40 +20,47 @@ class CircularLinkedList:
     def __init__(self):
         self.head = None      # i) Create Linked List
 
-    # ii) Insert element at any position
+     # i) Create + ii) Insert at Any Position
     def insert_at_position(self, value, position):
+        if position < 1:
+            print("Invalid Position!")
+            return
+
         new_node = Node(value)
-
-        # Insert at first position
-        if position == 1:
-
+        
+        # Case 1: Empty List or Insert at Position 1 (First Position)
+        if self.head is None or position == 1:
             # Empty list
             if self.head is None:
                 self.head = new_node
-                new_node.next = self.head
+                new_node.next = self.head  # <<< Point new node to itself to maintain circular structure
+                print(value, "inserted as first node")
                 return
 
             # Find last node
-            last = self.head
-            while last.next != self.head:
-                last = last.next
+            temp = self.head
+            while temp.next != self.head:
+                temp = temp.next
 
             new_node.next = self.head
-            last.next = new_node
+            temp.next = new_node
             self.head = new_node
+            print(value, "inserted at position", position)
             return
 
         temp = self.head
 
-        for i in range(position - 2):
+        # Case 2: Insert at Middle or Last Position
+        for _ in range(position - 2):
             temp = temp.next
+            if temp.next == self.head:          # Reached end of list
+                break
 
-            if temp == self.head:
-                print("Invalid Position")
-                return
-
+        # Insert the new node
         new_node.next = temp.next
         temp.next = new_node
+
+        print(value, "inserted at position", position)
 
     # iii) Delete element from any position
     def delete_at_position(self, position):
@@ -61,54 +68,59 @@ class CircularLinkedList:
         if self.head is None:
             print("List is Empty")
             return
+        
+        if position < 1:
+            print("Invalid Position")
+            return
+        
 
-        # Delete first node
+        # Delete First Node (Position 1)
         if position == 1:
-
             # Only one node
-            if self.head.next == self.head:
+            if self.head.next == self.head:        # Only one node
+                print(self.head.data, "deleted from position 1")
                 self.head = None
                 return
 
-            # Find last node
-            last = self.head
-            while last.next != self.head:
-                last = last.next
+            # More than one node
+            temp = self.head
+            while temp.next != self.head:
+                temp = temp.next
 
-            last.next = self.head.next
-            self.head = self.head.next
+            print(self.head.data, "deleted from position 1") # <<<
+            temp.next = self.head.next # Update last node's next pointer
+            self.head = self.head.next # Update head to the next node
             return
-
-        prev = None
+        
+         # Delete Middle or Last Node
         temp = self.head
 
-        for i in range(position - 1):
-            prev = temp
-            temp = temp.next
-
-            if temp == self.head:
+        for _ in range(position - 2):
+            temp = temp.next # 10 20 30 -> temp =  20 and temp.next = 30 
+            
+            # Now delete the node
+            if temp.next == self.head: # Trying to delete head (invalid case)
                 print("Invalid Position")
                 return
+        
+        print(temp.next.data, "deleted from position", position)
+        temp.next = temp.next.next # Update the next pointer to skip the deleted node # 10 20 30 40 -> temp.next = 40 (skipping 30) temp.next.next = 40.next = 10 (back to head)
+        
 
-        prev.next = temp.next
-
-    # Display Circular Linked List
+   # Display
     def display(self):
-
         if self.head is None:
             print("List is Empty")
             return
 
         temp = self.head
-
+        print("Circular Linked List: ", end="")
         while True:
             print(temp.data, end=" -> ")
             temp = temp.next
-
             if temp == self.head:
                 break
-
-        print("(back to head)")
+        print("(back to", self.head.data, ")")
 
 
 # ---------------- MAIN PROGRAM ----------------
@@ -116,6 +128,7 @@ cll = CircularLinkedList()
 
 cll.insert_at_position(10, 1)
 cll.insert_at_position(20, 2)
+cll.insert_at_position(15, 2)
 cll.insert_at_position(30, 3)
 cll.insert_at_position(25, 3)
 
