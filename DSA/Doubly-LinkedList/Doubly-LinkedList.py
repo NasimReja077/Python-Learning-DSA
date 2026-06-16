@@ -14,45 +14,29 @@ class DoublyLinkedList:
     # ---------- INSERT OPERATIONS ----------
 
     # Insert at beginning
-    def insert_beginning(self, value):
-        new_node = Node(value)
-
-        if self.head is not None:
-            self.head.prev = new_node
-            new_node.next = self.head
-
-        self.head = new_node
-        print(value, "inserted at beginning")
-    
     # def insert_beginning(self, value):
     #     new_node = Node(value)
 
-    #     if self.head is None:
-    #         self.head = new_node
-    #         print(value, "inserted at Beg")
-    #         return
-    #     new_node.next = self.head
-    #     self.head.prev = new_node
+    #     if self.head is not None:
+    #         self.head.prev = new_node
+    #         new_node.next = self.head
+
     #     self.head = new_node
     #     print(value, "inserted at beginning")
-
-    # Insert at end
-    def insert_end(self, value):
+    
+    def insert_beginning(self, value):
         new_node = Node(value)
 
         if self.head is None:
             self.head = new_node
-            print(value, "inserted at end")
+            print(value, "inserted at Beg")
             return
+        new_node.next = self.head
+        self.head.prev = new_node
+        self.head = new_node
+        print(value, "inserted at beginning")
 
-        temp = self.head
-        while temp.next: # while temp.next != None:
-            temp = temp.next
-
-        temp.next = new_node
-        new_node.prev = temp
-        print(value, "inserted at end")
-    
+    # Insert at end
     # def insert_end(self, value):
     #     new_node = Node(value)
 
@@ -62,12 +46,28 @@ class DoublyLinkedList:
     #         return
 
     #     temp = self.head
-    #     while temp.next != None:
+    #     while temp.next: # while temp.next != None:
     #         temp = temp.next
 
     #     temp.next = new_node
     #     new_node.prev = temp
     #     print(value, "inserted at end")
+    
+    def insert_end(self, value):
+        new_node = Node(value)
+
+        if self.head is None:
+            self.head = new_node
+            print(value, "inserted at end")
+            return
+
+        temp = self.head
+        while temp.next != None:
+            temp = temp.next
+
+        temp.next = new_node
+        new_node.prev = temp
+        print(value, "inserted at end")
 
     # Insert after a given value (middle insertion)
     def insert_after(self, prev_value, value):
@@ -76,13 +76,16 @@ class DoublyLinkedList:
         while temp:
             if temp.data == prev_value:
                 new_node = Node(value)
+                # Set the new node's next and prev pointers
                 new_node.next = temp.next
                 new_node.prev = temp
 
+                # Update the next node's prev pointer if it exists
                 if temp.next:
                     temp.next.prev = new_node
-
+                # Update the current node's next pointer
                 temp.next = new_node
+                
                 print(value, "inserted after", prev_value)
                 return
 
@@ -119,6 +122,35 @@ class DoublyLinkedList:
             temp = temp.next
         print("NULL")
 
+    # forward traversal
+    def display_forward(self):
+        if self.head is None:
+            print("List is empty")
+            return
+        temp = self.head
+        print("Forward Traversal:")
+        while temp:
+            print(temp.data, end=" <-> ")
+            temp = temp.next
+        print("NULL")
+    
+    # backward traversal
+    def display_backward(self):
+        if self.head is None:
+            print("List is empty")
+            return
+        temp = self.head
+
+        # Move to the last node
+        while temp.next:
+            temp = temp.next
+
+        print("Backward Traversal:")
+        while temp:
+            print(temp.data, end=" <-> ")
+            temp = temp.prev
+        print("NULL")
+    
     # ---------- SEARCH ----------
     def search(self, key):
         temp = self.head
@@ -152,10 +184,12 @@ class DoublyLinkedList:
         if self.head is None:
             print("List is empty")
             return
-
+        
+        # Update head to the next node and set the new head prev pointer to None
         print(self.head.data, "deleted from beginning")
         self.head = self.head.next # head shif to next node 
 
+        # If the new head is not None, set its prev pointer to None
         if self.head:
             self.head.prev = None
 
@@ -184,11 +218,14 @@ class DoublyLinkedList:
         while temp:
             if temp.data == key:
 
+                # Update the previous node's next pointer and the next node's prev pointer
                 if temp.prev:
-                    temp.prev.next = temp.next
+                    temp.prev.next = temp.next # If temp.prev exists, update its next pointer to skip the current node
                 else:
-                    self.head = temp.next  # deleting head
-
+                    self.head = temp.next  # If temp.prev is None, it means we're deleting the head node, so we update head to the next node
+                    if self.head:
+                        self.head.prev = None
+                # Update the next node's prev pointer if it exists
                 if temp.next:
                     temp.next.prev = temp.prev
 
@@ -209,6 +246,8 @@ dll.insert_end(30)
 dll.insert_after(20, 25)
 
 dll.display()
+dll.display_forward()
+dll.display_backward()
 
 dll.search(25)
 dll.count_nodes()
