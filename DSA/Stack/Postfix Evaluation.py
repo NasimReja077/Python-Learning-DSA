@@ -22,3 +22,19 @@ def evaluate_postfix(expression):
 print(evaluate_postfix("5 1 2 + 4 * + 3 -"))   # 14
 print(evaluate_postfix("7 3 + 5 *"))            # 50
 print(evaluate_postfix("8 2 3 ^ / 2 3 * +"))   # 7
+
+
+# def evaluate_postfix(postfix):
+#     stack = []
+#     for token in postfix.split():   # assuming space separated
+#         if token.isdigit():
+#             stack.append(int(token))
+#         else:
+#             b = stack.pop()
+#             a = stack.pop()
+#             if token == '+': stack.append(a + b)
+#             elif token == '-': stack.append(a - b)
+#             elif token == '*': stack.append(a * b)
+#             elif token == '/': stack.append(a / b)
+#             elif token == '^': stack.append(a ** b)
+#     return stack.pop()
