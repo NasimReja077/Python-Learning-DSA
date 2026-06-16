@@ -10,14 +10,14 @@ class CircularLinkedList:
     def __init__(self):
         self.head = None
 
-
     # i) Insert at Beginning
     def insert_beginning(self, value):
         new_node = Node(value)
 
         if self.head is None:
             self.head = new_node
-            new_node.next = self.head
+            # new_node.next = self.head
+            new_node.next = new_node # why new_node why not self.head ? because we want to point to the new node itself, not the head which is also the new node but we want to be explicit.
             print(value, "inserted as first node")
             return
 
@@ -74,7 +74,7 @@ class CircularLinkedList:
         temp = self.head
         while True:
             if temp.data == prev_value:
-                new_node = Node(value)
+                new_node = Node(value) # <<< 
                 new_node.next = temp.next
                 temp.next = new_node
                 print(value, "inserted after", prev_value)
@@ -164,7 +164,7 @@ class CircularLinkedList:
         if self.head is None:
             print("List is empty")
             return
-
+        # if is only one node
         if self.head.next == self.head: #  Check single node case
             print(self.head.data, "deleted (only node)")
             self.head = None
@@ -175,6 +175,7 @@ class CircularLinkedList:
             temp = temp.next
 
         print(self.head.data, "deleted from beginning")
+        #  Update Last Nodes next pointer to new head
         temp.next = self.head.next # 40.next = 20 
         self.head = self.head.next
 
@@ -213,6 +214,32 @@ class CircularLinkedList:
 
 
     # ix) Delete a given element
+    # def delete_value(self, key):
+    #     if self.head is None:
+    #         print("List is empty")
+    #         return
+
+    #     temp = self.head
+    #     prev = None
+
+    #     while True:
+    #         if temp.data == key:
+    #             if prev is None:
+    #                 # deleting head
+    #                 self.delete_beginning()
+    #             else:
+    #                 prev.next = temp.next
+    #                 print(key, "deleted from circular linked list")
+    #             return
+
+    #         prev = temp
+    #         temp = temp.next
+
+    #         if temp == self.head:
+    #             break
+
+    #     print(key, "not found")
+    # 
     def delete_value(self, key):
         if self.head is None:
             print("List is empty")
@@ -221,23 +248,44 @@ class CircularLinkedList:
         temp = self.head
         prev = None
 
-        while True:
+        # Case 1: If head contains key
+        if temp.data == key:
+            # Only one node case
+            if temp.next == self.head:
+                # print(key, "deleted (only node)")
+                self.head = None
+                print(key, "deleted (only node)")
+                return
+
+            # Multiple nodes - delete head
+            # More than one node
+            # Find last node to update its next pointer after head deletion
+            # Head Node 
+            temp = self.head
+            while temp.next != self.head:
+                temp = temp.next
+
+            # Update head to next node and update last node's next pointer to new head
+            self.head = self.head.next
+            temp.next = self.head
+            print(key, "deleted from circular linked list")
+            return
+
+        # Case 2: Deleting non-head node
+        prev = temp
+        temp = temp.next
+
+        while temp != self.head:
             if temp.data == key:
-                if prev is None:
-                    # deleting head
-                    self.delete_beginning()
-                else:
-                    prev.next = temp.next
-                    print(key, "deleted from circular linked list")
+                prev.next = temp.next
+                print(key, "deleted from circular linked list")
                 return
 
             prev = temp
             temp = temp.next
 
-            if temp == self.head:
-                break
-
         print(key, "not found")
+
 
 cll = CircularLinkedList()
 
@@ -266,49 +314,3 @@ cll.delete_end()
 cll.display()
 cll.count_nodes()
 
-
-
-def delete_value(self, key):
-
-    if self.head is None:
-        print("List is empty")
-        return
-
-    temp = self.head
-    prev = None
-
-    # Case 1: If head contains key
-    if temp.data == key:
-
-        # Only one node case
-        if temp.next == self.head:
-            print(key, "deleted (only node)")
-            self.head = None
-            # print(key, "deleted (only node)")
-            return
-
-        # Multiple nodes - delete head
-        # More than one node
-        last = self.head
-        while last.next != self.head:
-            last = last.next
-
-        self.head = self.head.next
-        last.next = self.head
-        print(key, "deleted from circular linked list")
-        return
-
-    # Case 2: Deleting non-head node
-    prev = temp
-    temp = temp.next
-
-    while temp != self.head:
-        if temp.data == key:
-            prev.next = temp.next
-            print(key, "deleted from circular linked list")
-            return
-
-        prev = temp
-        temp = temp.next
-
-    print(key, "not found")
