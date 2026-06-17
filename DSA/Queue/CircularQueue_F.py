@@ -11,6 +11,7 @@ class CircularQueue:
 
     def is_full(self):
         return (self.rear + 1) % self.size == self.front
+            # self.rear == self.size - 1
     
     def get_size(self):
         if self.is_empty():
