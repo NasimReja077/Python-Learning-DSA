@@ -1,10 +1,13 @@
 class Queue:
     def __init__(self, size):
         self.size = size
-        self.queue = [None] * size
+        self.queue = [None] * size # Creates Array size 5. [None, None, ..]
         self.front = -1
-        self.rear = -1 
-    
+        self.rear = -1  # I
+        
+# Front points to the first element.
+# -1 means queue is empty.
+
     def is_empty(self):
         return self.front == -1
 
@@ -13,7 +16,7 @@ class Queue:
         
     # Insertion operation
     def enqueue(self, value):
-        if self.is_full():
+        if self.is_full(): # if self.rear == self.size - 1:
             print("Queue Overflow! Cannot insert.")
         else:
             if self.front == -1:   # First element
@@ -24,6 +27,7 @@ class Queue:
 
     # Deletion operation
     def dequeue(self):
+        # if self.front == -1 or self.front > self.rear:
         if self.is_empty() or self.front > self.rear:
             print("Queue Underflow! Nothing to delete.")
         else:
