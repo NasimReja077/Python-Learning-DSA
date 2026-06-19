@@ -2,7 +2,7 @@ def QuickSort(arr, l, r):
     if( l < r ):
         p = partition(arr, l, r)
 
-        QuickSort(arr, l, p-1)
+        QuickSort(arr, l, p-1) # why p-1
         QuickSort(arr, p+1, r)
 
 def partition(arr, l, r):
@@ -27,7 +27,8 @@ def partition(arr, l, r):
             break
     
     arr[l], arr[j] = arr[j], arr[l] # Finally, swap the pivot (at position l) with element at j.
-    # why l and j ? -> l is the index of pivot and j is the index of last element in left partition. So we will swap pivot with last element in left partition. So pivot will be in correct position.
+    # why l and j ? -> l is the index of pivot and j is the index of last element in left partition. 
+    # So we will swap pivot with last element in left partition. So pivot will be in correct position.
     return j
 
 arr = [23, 45, 12, 65, 34, 10, 3]
