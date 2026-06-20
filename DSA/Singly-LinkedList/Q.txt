@@ -1,0 +1,28 @@
+In the worst case, what is the number of comparisons needed to search a singly linked list of length n for a given element 1mk
+
+Write the advantages of array over linked list. 1mk
+
+Write a Python program to implement the "Insert at End" and "Delete from End" operation of a doubly Linked List using Class "Node". 5mk
+
+
+(a) Explain the advantages of doubly linked list and circular linked list over singly linked list. 6 mk
+(b) Write a python program for a singly linked list which can perform following operations 9mk
+i) create the linked list.
+ii) insert element in any position.
+iii) delete the element from any position.
+----------------------------------------
+
+Write the information stored in a doubly-linked list's nodes. 1mk
+
+Write a function to insert a node at the beginning of an existing double linked list. 5mk
+
+Write a program to insert a node at any position of an existing double linked list. Your function should run correctly when you are inserting at the first and the last position of the list and when you are inserting an element when the list is empty. 15mk
+
+-------------------------------
+Let P be a singly linked list, Let Q be the pointer to an intermediate node x in the list. What is the worst-case time complexity of the best known algorithm to delete the node x from the list? 1mk
+
+What is the time complexity to insert an element to the front of a LinkedList(head pointer given)? 1mk
+
+In the worst case, what is the number of comparisons needed to search a singly linked list of length n for a given element 1mk
+
+Write a Python program to implement the "Insert at End" and "Delete from End" operation of a singly Linked List using Class "Node". [5]
