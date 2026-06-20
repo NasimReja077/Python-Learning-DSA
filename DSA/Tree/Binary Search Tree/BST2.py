@@ -79,7 +79,7 @@ def delete(root, value):
     if root is None: #  If Node not found, return None
         return root
     
-    # 1. Search for the node
+    # 1. Search for the node   # Find the node to delete
     if value < root.data:
         root.left = delete(root.left, value)
         
