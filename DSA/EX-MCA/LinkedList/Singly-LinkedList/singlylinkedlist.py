@@ -138,7 +138,7 @@ class SinglyLinkedList:
             if temp.data == key: # Found the key to be deleted
                 # Case 1: If the node to be deleted is the head node, update head to next node
                 if prev is None:
-                    self.head = temp.next # If head node is to be deleted, update head to next node
+                    self.head = temp.next #If head node is to be deleted, update head to next node
                 else:
                 # Case 2: If the node to be deleted is in the middle or end, link previous node to next node, effectively removing current node from the list
                     prev.next = temp.next 
