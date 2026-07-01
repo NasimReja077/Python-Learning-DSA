@@ -1,0 +1,43 @@
+Algorithm Level_Order_Traversal(root):
+
+    IF root is NULL:
+        Print "Tree is empty"
+        Return
+
+    Create a Queue
+    Enqueue root into Queue
+
+    Print "Level Order: "
+
+    WHILE Queue is not empty:
+        current = Dequeue from front of Queue
+        Print current.data
+
+        IF current.left is not NULL:
+            Enqueue current.left
+
+        IF current.right is not NULL:
+            Enqueue current.right
+
+    Print new line
+
+
+
+    ========
+
+
+LevelOrder(root):
+    if root == NULL:
+        return
+    
+    Queue q = new Queue()
+    q.enqueue(root)
+    
+    while q is not empty:
+        node = q.dequeue()
+        print(node.data)
+        
+        if node.left != NULL:
+            q.enqueue(node.left)
+        if node.right != NULL:
+            q.enqueue(node.right)
