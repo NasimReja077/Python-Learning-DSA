@@ -17,11 +17,13 @@ def heap_sort(arr):
     n = len(arr)
      # Step 1: Build Max Heap
     for i in range(n // 2 - 1, -1, -1):
-        heapify(arr, n, i) # why n, i ? -> n is heap size and i is current root node index. We are building max heap from last parent to root. So we will call heapify for each parent node starting from last parent to root.
+        heapify(arr, n, i) # why n, i ? -> n is heap size and i is current root node index. 
+        # We are building max heap from last parent to root. So we will call heapify for each parent node starting from last parent to root.
     
     # Step 2: Extract elements one by one
     for i in range(n - 1, 0, -1):
-        arr[0], arr[i] = arr[i], arr[0]  # why 0, i ? -> 0 is root node index and i is last element index. We are swapping root with last element. So we will call heapify for reduced heap after swap. So we need to pass reduced heap size and root index to heapify.
+        arr[0], arr[i] = arr[i], arr[0]  # why 0, i ? -> 0 is root node index and i is last element index. 
+        # We are swapping root with last element. So we will call heapify for reduced heap after swap. So we need to pass reduced heap size and root index to heapify.
     return arr
 
 # Example Usage

@@ -5,7 +5,7 @@
 def heapify(arr, n, i):
     largest = i # Initially assume current root node is largest. Ex- i = 0 | Lar=0 | arr[0] = 64 
     left = 2 * i + 1 # Left child formula - 2*i + 1 (For any node i)
-    right = 2 * i + 2 # Left child formula - 2*i + 2
+    right = 2 * i + 2 # Right child formula - 2*i + 2
 
     # Check if left child exists and is greater than root
     # Check left child
